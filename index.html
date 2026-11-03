@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>PulseFit Pro - Treinos & Avaliação</title>
+  <title>PulseFit Pro - Treinos & Avaliação Reativa</title>
   
   <!-- Tailwind CSS, Lucide Icons & Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
       theme: {
         extend: {
           colors: {
-            brand: '#10b981', // Verde esmeralda
+            brand: '#10b981',
             brandLight: '#34d399',
             brandOrange: '#f97316',
             brandCyan: '#06b6d4',
@@ -50,11 +50,12 @@
         <p class="text-[11px] font-bold text-brand tracking-wider uppercase" id="currentDate">HOJE</p>
         <h1 class="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
           <span id="userNameHeader">Atleta</span>
-          <span id="athleteLevelBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-brand border border-brand/20 font-semibold">Atleta Híbrido</span>
+          <span id="athleteLevelBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-brand border border-brand/20 font-semibold">Híbrido</span>
         </h1>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="openSheetModal()" title="Importar/Exportar Planilha" class="w-9 h-9 rounded-full bg-darkSurface flex items-center justify-center border border-zinc-800 hover:text-brand transition">
+        <span id="syncIndicator" title="Sincronizado em tempo real" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <button onclick="openSheetModal()" title="Planilhas e Backups" class="w-9 h-9 rounded-full bg-darkSurface flex items-center justify-center border border-zinc-800 hover:text-brand transition">
           <i data-lucide="file-spreadsheet" class="w-4 h-4 text-zinc-300"></i>
         </button>
       </div>
@@ -66,7 +67,7 @@
       <!-- ================= 1. HOJE ================= -->
       <section id="tab-today" class="tab-pane space-y-4">
         
-        <!-- Hidratação -->
+        <!-- Hidratação Dinâmica Baseada no Peso -->
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2.5">
@@ -74,7 +75,7 @@
                 <i data-lucide="droplet" class="w-4 h-4 fill-cyan-400"></i>
               </div>
               <div>
-                <h3 class="text-xs font-bold text-zinc-300">Hidratação Diária</h3>
+                <h3 class="text-xs font-bold text-zinc-300">Hidratação Adaptativa</h3>
                 <p class="text-xs text-zinc-400"><span id="waterCurrentText">0</span> / <span id="waterGoalText">3000</span> ml</p>
               </div>
             </div>
@@ -90,6 +91,22 @@
           </div>
         </div>
 
+        <!-- Resumo Rápido de Energia e Metas (Cascata da Biometria) -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-darkSurface border border-zinc-800 p-3 rounded-2xl text-center">
+            <span class="text-[10px] text-zinc-400 block font-medium">Meta Calórica</span>
+            <span class="text-sm font-extrabold text-amber-400" id="todayQuickCalories">-- kcal</span>
+          </div>
+          <div class="bg-darkSurface border border-zinc-800 p-3 rounded-2xl text-center">
+            <span class="text-[10px] text-zinc-400 block font-medium">Proteína Alvo</span>
+            <span class="text-sm font-extrabold text-brand" id="todayQuickProtein">-- g</span>
+          </div>
+          <div class="bg-darkSurface border border-zinc-800 p-3 rounded-2xl text-center">
+            <span class="text-[10px] text-zinc-400 block font-medium">IMC Atual</span>
+            <span class="text-sm font-extrabold text-cyan-400" id="todayQuickIMC">--</span>
+          </div>
+        </div>
+
         <!-- Sessão do Dia / Modalidade Ativa -->
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
@@ -98,11 +115,11 @@
                 <i data-lucide="dumbbell" class="w-4 h-4"></i>
               </span>
               <div>
-                <h3 class="text-xs font-bold text-zinc-300">Sessão Programada</h3>
-                <p class="text-xs text-brand font-semibold" id="currentWorkoutTitle">Treino A - Híbrido</p>
+                <h3 class="text-xs font-bold text-zinc-300">Treino Ativo do Dia</h3>
+                <p class="text-xs text-brand font-semibold" id="currentWorkoutTitle">Treino A</p>
               </div>
             </div>
-            <button onclick="switchTab('tab-workouts')" class="text-xs font-medium text-brand hover:underline">Ver Treinos</button>
+            <button onclick="switchTab('tab-workouts')" class="text-xs font-medium text-brand hover:underline">Ver Todos</button>
           </div>
           <div id="quickWorkoutList" class="space-y-2 text-xs text-zinc-300"></div>
         </div>
@@ -111,9 +128,9 @@
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-xs font-bold text-zinc-300 flex items-center gap-2">
-              <i data-lucide="pill" class="w-4 h-4 text-amber-400"></i> Suplementos do Dia
+              <i data-lucide="pill" class="w-4 h-4 text-amber-400"></i> Suplementação
             </h3>
-            <span class="text-xs text-zinc-500" id="supplementsCounter">0 concluídos</span>
+            <span class="text-xs text-zinc-500" id="supplementsCounter">0/0</span>
           </div>
           <div id="todaySupplementsList" class="space-y-2"></div>
         </div>
@@ -122,9 +139,9 @@
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-xs font-bold text-zinc-300 flex items-center gap-2">
-              <i data-lucide="utensils" class="w-4 h-4 text-emerald-400"></i> Refeições
+              <i data-lucide="utensils" class="w-4 h-4 text-emerald-400"></i> Plano Alimentar
             </h3>
-            <button onclick="switchTab('tab-diet')" class="text-xs font-medium text-brand hover:underline">Dieta</button>
+            <span class="text-xs text-zinc-500" id="mealsCounter">0/0</span>
           </div>
           <div id="todayMealsChecklist" class="space-y-2"></div>
         </div>
@@ -138,17 +155,13 @@
             <h2 class="text-lg font-bold">Rotinas & Modalidades</h2>
             <p class="text-xs text-zinc-400">Musculação, Corrida, Ciclismo, Calistenia</p>
           </div>
-          <div class="flex gap-2">
-            <button onclick="openAddExerciseModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
-              <i data-lucide="plus" class="w-4 h-4"></i> Atividade
-            </button>
-          </div>
+          <button onclick="openAddExerciseModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Atividade
+          </button>
         </div>
 
-        <!-- Seletor de Divisões / Modalidades -->
-        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="splitSelector">
-          <!-- Gerado dinamicamente -->
-        </div>
+        <!-- Seletor de Divisões / Pastas -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="splitSelector"></div>
 
         <!-- Detalhes do Treino Selecionado -->
         <div class="flex justify-between items-center px-1">
@@ -161,50 +174,75 @@
         <!-- Container de Atividades da Divisão -->
         <div id="exercisesContainer" class="space-y-2.5"></div>
 
-        <!-- Modelos de Planilhas Rápidas -->
+        <!-- Modelos Prontos de Planilhas -->
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 space-y-2">
           <h4 class="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Adaptar Planilhas Prontas
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Planilhas Pré-configuradas
           </h4>
-          <p class="text-[11px] text-zinc-400">Carregue um plano completo de treino montado:</p>
+          <p class="text-[11px] text-zinc-400">Adicione modelos prontos em 1 clique:</p>
           <div class="grid grid-cols-2 gap-2 pt-1">
             <button onclick="applyPresetRoutine('hybrid')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
               <p class="text-xs font-bold text-brand">Atleta Híbrido</p>
-              <p class="text-[10px] text-zinc-400 leading-tight">Musculação + Corrida 5k/10k</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Musculação + Corrida 5k</p>
             </button>
             <button onclick="applyPresetRoutine('calisthenics')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
               <p class="text-xs font-bold text-cyan-400">Calistenia & Core</p>
-              <p class="text-[10px] text-zinc-400 leading-tight">Barras, flexões & isometrias</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Barras, flexões & L-sit</p>
             </button>
             <button onclick="applyPresetRoutine('cycling')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
-              <p class="text-xs font-bold text-amber-400">Ciclismo & Indoor</p>
-              <p class="text-[10px] text-zinc-400 leading-tight">Tiros de potência e giro Z2</p>
+              <p class="text-xs font-bold text-amber-400">Ciclismo & Giro</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Tiros de potência e Z2</p>
             </button>
             <button onclick="applyPresetRoutine('running')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
-              <p class="text-xs font-bold text-rose-400">Foco em Corrida</p>
-              <p class="text-[10px] text-zinc-400 leading-tight">Regenerativo, tiros e longão</p>
+              <p class="text-xs font-bold text-rose-400">Corrida Endurance</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Intervalados e Longão</p>
             </button>
           </div>
         </div>
       </section>
 
-      <!-- ================= 3. DIETA & SUPLEMENTOS ================= -->
+      <!-- ================= 3. DIETA & METAS NUTRICIONAIS ================= -->
       <section id="tab-diet" class="tab-pane hidden space-y-4">
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-lg font-bold">Dieta & Nutrição</h2>
-            <p class="text-xs text-zinc-400">Horários, alimentos e suplementação</p>
+            <h2 class="text-lg font-bold">Nutrição & Macros</h2>
+            <p class="text-xs text-zinc-400">Metas recalculadas pelo seu perfil físico</p>
           </div>
           <button onclick="openAddMealModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
             <i data-lucide="plus" class="w-4 h-4"></i> Refeição
           </button>
         </div>
 
+        <!-- Painel de Macronutrientes Calculados Automaticamente -->
+        <div class="bg-gradient-to-br from-darkSurface to-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
+          <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+            <span class="text-xs font-bold text-zinc-300">Recomendação Diária (Manutenção)</span>
+            <span class="text-xs font-black text-amber-400" id="dietTotalCalories">-- kcal</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center pt-1">
+            <div class="bg-zinc-800/60 p-2 rounded-xl border border-zinc-700/40">
+              <span class="text-[10px] text-emerald-400 uppercase font-semibold">Proteínas</span>
+              <p class="text-sm font-extrabold text-white" id="macroProtein">-- g</p>
+              <span class="text-[9px] text-zinc-400">~2.0g / kg</span>
+            </div>
+            <div class="bg-zinc-800/60 p-2 rounded-xl border border-zinc-700/40">
+              <span class="text-[10px] text-cyan-400 uppercase font-semibold">Carboidratos</span>
+              <p class="text-sm font-extrabold text-white" id="macroCarbs">-- g</p>
+              <span class="text-[9px] text-zinc-400">Energia GET</span>
+            </div>
+            <div class="bg-zinc-800/60 p-2 rounded-xl border border-zinc-700/40">
+              <span class="text-[10px] text-amber-400 uppercase font-semibold">Gorduras</span>
+              <p class="text-sm font-extrabold text-white" id="macroFat">-- g</p>
+              <span class="text-[9px] text-zinc-400">~0.9g / kg</span>
+            </div>
+          </div>
+        </div>
+
         <div id="mealsContainer" class="space-y-3"></div>
 
         <div class="pt-3 border-t border-zinc-800">
           <div class="flex justify-between items-center mb-2">
-            <h3 class="text-sm font-bold">Suplementação</h3>
+            <h3 class="text-sm font-bold">Suplementação Prescrita</h3>
             <button onclick="openAddSupplementModal()" class="text-xs text-brand font-semibold">+ Adicionar</button>
           </div>
           <div id="supplementsManagementList" class="space-y-2"></div>
@@ -216,7 +254,7 @@
         <div class="flex justify-between items-center">
           <div>
             <h2 class="text-lg font-bold">Evolução do Peso</h2>
-            <p class="text-xs text-zinc-400">Gráfico dinâmico e registros</p>
+            <p class="text-xs text-zinc-400">Registros sincronizados com biometria</p>
           </div>
           <button onclick="openWeightModal()" class="px-3 py-2 bg-brand text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
             <i data-lucide="plus" class="w-4 h-4"></i> Pesar
@@ -243,10 +281,10 @@
       <section id="tab-athlete" class="tab-pane hidden space-y-4">
         <div>
           <h2 class="text-lg font-bold">Perfil & Avaliação Física</h2>
-          <p class="text-xs text-zinc-400">Dados biométricos, IMC, TMB e medidas antropométricas</p>
+          <p class="text-xs text-zinc-400">Biometria, IMC, TMB, GET e Relação Cintura-Quadril</p>
         </div>
 
-        <!-- Painel de Cálculos Automáticos (IMC / TMB / GET) -->
+        <!-- Painel de Cálculos Automáticos -->
         <div class="bg-gradient-to-br from-darkSurface to-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
           <div class="grid grid-cols-3 gap-2 text-center">
             <div class="bg-zinc-800/60 p-2.5 rounded-2xl border border-zinc-700/50">
@@ -256,116 +294,121 @@
             </div>
 
             <div class="bg-zinc-800/60 p-2.5 rounded-2xl border border-zinc-700/50">
-              <span class="text-[10px] text-zinc-400 uppercase font-semibold">Metabolismo (TMB)</span>
+              <span class="text-[10px] text-zinc-400 uppercase font-semibold">Basal (TMB)</span>
               <p class="text-lg font-black text-cyan-400" id="calcTMB">--</p>
-              <span class="text-[9px] text-zinc-500">kcal/dia basal</span>
+              <span class="text-[9px] text-zinc-500">kcal/dia</span>
             </div>
 
             <div class="bg-zinc-800/60 p-2.5 rounded-2xl border border-zinc-700/50">
               <span class="text-[10px] text-zinc-400 uppercase font-semibold">Gasto Total (GET)</span>
               <p class="text-lg font-black text-amber-400" id="calcGET">--</p>
-              <span class="text-[9px] text-zinc-500">kcal com treino</span>
+              <span class="text-[9px] text-zinc-500">kcal c/ treino</span>
             </div>
           </div>
         </div>
 
-        <!-- Dados Pessoais & Biometria -->
+        <!-- Dados Pessoais & Biometria Reativa -->
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
           <div class="flex justify-between items-center">
-            <h3 class="text-xs font-bold text-zinc-300">Biometria do Atleta</h3>
-            <button onclick="saveAthleteProfile()" class="text-xs font-bold text-brand hover:underline">Salvar Perfil</button>
+            <h3 class="text-xs font-bold text-zinc-300">Biometria (Calcula ao Digitar)</h3>
+            <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3 h-3"></i> Auto-salvo
+            </span>
           </div>
           <div class="grid grid-cols-2 gap-3 text-xs">
             <div>
               <label class="text-zinc-400 block mb-1 text-[11px]">Nome do Atleta</label>
-              <input type="text" id="profName" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+              <input type="text" id="profName" oninput="handleBiometricFieldChange()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
             </div>
             <div>
               <label class="text-zinc-400 block mb-1 text-[11px]">Sexo Biológico</label>
-              <select id="profGender" onchange="calculateBiometrics()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+              <select id="profGender" onchange="handleBiometricFieldChange()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
                 <option value="male">Masculino</option>
                 <option value="female">Feminino</option>
               </select>
             </div>
             <div>
               <label class="text-zinc-400 block mb-1 text-[11px]">Idade (anos)</label>
-              <input type="number" id="profAge" oninput="calculateBiometrics()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+              <input type="number" id="profAge" oninput="handleBiometricFieldChange()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
             </div>
             <div>
               <label class="text-zinc-400 block mb-1 text-[11px]">Altura (cm)</label>
-              <input type="number" id="profHeight" oninput="calculateBiometrics()" placeholder="Ex: 178" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+              <input type="number" id="profHeight" oninput="handleBiometricFieldChange()" placeholder="Ex: 178" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
             </div>
             <div>
               <label class="text-zinc-400 block mb-1 text-[11px]">Peso Atual (kg)</label>
-              <input type="number" step="0.1" id="profWeight" oninput="calculateBiometrics()" placeholder="Ex: 78.5" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+              <input type="number" step="0.1" id="profWeight" oninput="handleBiometricFieldChange()" placeholder="Ex: 78.5" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
             </div>
             <div>
-              <label class="text-zinc-400 block mb-1 text-[11px]">% Gordura Estimado (BF%)</label>
-              <input type="number" step="0.1" id="profBF" placeholder="Opcional (Ex: 14)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+              <label class="text-zinc-400 block mb-1 text-[11px]">% Gordura Corporal (BF%)</label>
+              <input type="number" step="0.1" id="profBF" oninput="handleBiometricFieldChange()" placeholder="Ex: 13.5" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
             </div>
           </div>
           <div>
             <label class="text-zinc-400 block mb-1 text-[11px]">Nível de Atividade Física Semanal</label>
-            <select id="profActivity" onchange="calculateBiometrics()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand">
+            <select id="profActivity" onchange="handleBiometricFieldChange()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand">
               <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
-              <option value="1.375">Leve (treinos leves 1 a 3 dias/sem)</option>
-              <option value="1.55" selected>Moderado (treinos 3 a 5 dias/sem)</option>
-              <option value="1.725">Intenso (treinos pesados 6 a 7 dias/sem)</option>
-              <option value="1.9">Atleta de Elite / Treinos Híbridos 2x ao dia</option>
+              <option value="1.375">Leve (treinos 1 a 3 dias/semana)</option>
+              <option value="1.55" selected>Moderado (treinos 3 a 5 dias/semana)</option>
+              <option value="1.725">Intenso (treinos pesados 6 a 7 dias/semana)</option>
+              <option value="1.9">Atleta Elite / Híbrido (2x ao dia)</option>
             </select>
           </div>
         </div>
 
-        <!-- Medidas Antropométricas Completas -->
+        <!-- Medidas Antropométricas Reativas -->
         <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
           <div class="flex justify-between items-center">
             <div>
               <h3 class="text-xs font-bold text-zinc-300">Medidas Corporais (cm)</h3>
-              <p class="text-[10px] text-zinc-500">Mantenha a fita métrica ajustada e relaxada</p>
+              <p class="text-[10px] text-zinc-500">Cálculo contínuo de Relação Cintura-Quadril</p>
             </div>
-            <button onclick="saveFullMeasurements()" class="px-3 py-1.5 bg-brand text-black font-bold text-xs rounded-xl active:scale-95 transition">Salvar Medidas</button>
+            <div class="text-right">
+              <span class="text-[10px] text-zinc-400">RCQ:</span>
+              <span id="rcqBadge" class="text-xs font-bold text-brand ml-1">--</span>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2.5 text-xs">
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Pescoço</span>
-              <input type="number" step="0.1" id="mNeck" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mNeck" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Tórax / Peito</span>
-              <input type="number" step="0.1" id="mChest" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mChest" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Cintura</span>
-              <input type="number" step="0.1" id="mWaist" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mWaist" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Abdômen</span>
-              <input type="number" step="0.1" id="mAbdomen" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mAbdomen" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Quadril</span>
-              <input type="number" step="0.1" id="mHip" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mHip" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Braço Direito</span>
-              <input type="number" step="0.1" id="mArmR" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mArmR" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Braço Esquerdo</span>
-              <input type="number" step="0.1" id="mArmL" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mArmL" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Coxa Direita</span>
-              <input type="number" step="0.1" id="mThighR" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mThighR" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
               <span class="text-[10px] text-zinc-400 block">Coxa Esquerda</span>
-              <input type="number" step="0.1" id="mThighL" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <input type="number" step="0.1" id="mThighL" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
             <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
-              <span class="text-[10px] text-zinc-400 block">Panturrilha (D/E)</span>
-              <input type="number" step="0.1" id="mCalf" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+              <span class="text-[10px] text-zinc-400 block">Panturrilha</span>
+              <input type="number" step="0.1" id="mCalf" oninput="handleMeasurementFieldChange()" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
             </div>
           </div>
         </div>
@@ -374,7 +417,7 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar (5 Abas Mobile-First) -->
+    <!-- Bottom Navigation Bar -->
     <nav class="absolute bottom-0 left-0 right-0 h-20 bg-darkSurface/95 backdrop-blur-lg border-t border-zinc-800/80 px-2 flex items-center justify-around z-30">
       <button onclick="switchTab('tab-today')" class="nav-item flex flex-col items-center gap-1 text-brand transition active:scale-90" data-target="tab-today">
         <i data-lucide="layout-grid" class="w-5 h-5"></i>
@@ -402,9 +445,9 @@
       </button>
     </nav>
 
-    <!-- ================= MODAIS & PLANILHAS ================= -->
+    <!-- ================= MODAIS ================= -->
 
-    <!-- Modal Adicionar Atividade Multimodal -->
+    <!-- Modal Adicionar Atividade -->
     <div id="modalAddExercise" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
       <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3">
         <div class="flex justify-between items-center">
@@ -446,7 +489,7 @@
       </div>
     </div>
 
-    <!-- Modal Importar/Exportar Planilhas -->
+    <!-- Modal Planilhas / Backup -->
     <div id="modalSheet" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
       <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
         <div class="flex justify-between items-center">
@@ -457,8 +500,8 @@
         </div>
 
         <div class="space-y-2 text-xs">
-          <p class="text-zinc-400">Cole uma planilha de treino em formato texto ou importe/exporte seu backup em JSON:</p>
-          <textarea id="sheetPasteArea" rows="4" placeholder="Exemplo simples para colar:&#10;Supino Reto: 4x10 - 30kg&#10;Agachamento: 4x8 - 80kg&#10;Corrida Regenerativa: 5km - 30min" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-2.5 text-white outline-none font-mono text-[11px]"></textarea>
+          <p class="text-zinc-400">Cole uma lista de exercícios para importar na divisão atual:</p>
+          <textarea id="sheetPasteArea" rows="4" placeholder="Exemplo:&#10;Supino Reto: 4x10 - 30kg&#10;Agachamento: 4x8 - 80kg&#10;Corrida: 5km - 28min" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-2.5 text-white outline-none font-mono text-[11px]"></textarea>
           
           <button onclick="importQuickTextSheet()" class="w-full py-2 bg-brand/20 border border-brand/40 text-brand font-bold rounded-xl active:scale-95 transition">
             Converter Texto para Treino Atual
@@ -484,6 +527,7 @@
           <h3 class="font-bold text-sm">Registrar Pesagem</h3>
           <button onclick="closeModal('modalWeight')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
+        <p class="text-[11px] text-zinc-400">O novo peso recalculará automaticamente suas calorias, macros, hidratação e histórico.</p>
         <input type="number" step="0.1" id="newWeightInput" placeholder="Ex: 79.2" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
         <button onclick="confirmWeight()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Peso</button>
       </div>
@@ -498,7 +542,7 @@
         </div>
         <input type="text" id="newMealName" placeholder="Ex: Pós-Treino, Almoço" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
         <input type="time" id="newMealTime" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
-        <textarea id="newMealDesc" rows="3" placeholder="Ex: 160g Frango, 200g Arroz, Legumes" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none"></textarea>
+        <textarea id="newMealDesc" rows="3" placeholder="Ex: 160g Frango, 200g Arroz, Salada verde" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none"></textarea>
         <button onclick="confirmAddMeal()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Refeição</button>
       </div>
     </div>
@@ -510,17 +554,19 @@
           <h3 class="font-bold text-sm">Adicionar Suplemento</h3>
           <button onclick="closeModal('modalAddSupplement')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-        <input type="text" id="newSuppName" placeholder="Ex: Creatina Creapure" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
-        <input type="text" id="newSuppDosage" placeholder="Ex: 5g após o treino" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+        <input type="text" id="newSuppName" placeholder="Ex: Creatina Monoidratada" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+        <input type="text" id="newSuppDosage" placeholder="Ex: 5g após treino ou café" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
         <button onclick="confirmAddSupplement()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar</button>
       </div>
     </div>
 
   </div>
 
-  <!-- ================= LÓGICA JAVASCRIPT ================= -->
+  <!-- ================= LÓGICA REATIVA JAVASCRIPT ================= -->
   <script>
-    // Estrutura de dados padrão com suporte robusto
+    // Canal de sincronia entre diferentes abas/janelas do navegador
+    const crossTabChannel = window.BroadcastChannel ? new BroadcastChannel('pulsefit_sync') : null;
+
     const DEFAULT_DATA = {
       athlete: {
         name: "Atleta Pro",
@@ -531,6 +577,14 @@
         bf: 13.5,
         activityLevel: 1.55,
         waterGoal: 3200
+      },
+      computed: {
+        imc: 0,
+        imcClass: "Normal",
+        tmb: 0,
+        get: 0,
+        macros: { protein: 0, carbs: 0, fat: 0 },
+        rcq: 0
       },
       measurements: {
         neck: 39,
@@ -559,7 +613,7 @@
         },
         {
           id: 'B',
-          title: 'Treino B - Corrida Tempo & Intervlos',
+          title: 'Treino B - Corrida Tempo & Tiros',
           modality: 'running',
           activities: [
             { id: 4, type: 'running', name: 'Aquecimento Trote Leve', param1: '1.5 km', param2: 'Pace 6:00' },
@@ -589,15 +643,15 @@
         }
       ],
       meals: [
-        { id: 1, name: "Café da Manhã", time: "07:30", desc: "4 ovos, 2 fatias de pão sourdough, café sem açúcar", checked: true },
-        { id: 2, name: "Almoço", time: "12:30", desc: "180g peito de frango, 200g arroz branco, azeite e vegetais", checked: true },
-        { id: 3, name: "Pré/Pós Treino Híbrido", time: "16:30", desc: "1 scoop Whey Isolado, 1 banana, 40g aveia", checked: false },
-        { id: 4, name: "Jantar", time: "20:00", desc: "180g patinho, 250g batata inglesa assada", checked: false }
+        { id: 1, name: "Café da Manhã", time: "07:30", desc: "4 ovos mexidos, 2 fatias pão integral, café preto", checked: true },
+        { id: 2, name: "Almoço", time: "12:30", desc: "180g peito de frango grelhado, 200g arroz, salada e azeite", checked: true },
+        { id: 3, name: "Lanche / Pré-Treino", time: "16:30", desc: "1 scoop Whey Protein, 1 banana, 40g aveia", checked: false },
+        { id: 4, name: "Jantar", time: "20:00", desc: "180g carne moída patinho, 250g batata inglesa", checked: false }
       ],
       supplements: [
-        { id: 1, name: "Creatina Monoidratada", dosage: "5g diárias pós-almoço", checked: true },
+        { id: 1, name: "Creatina Monoidratada", dosage: "5g diárias pós-treino", checked: true },
         { id: 2, name: "Beta-Alanina", dosage: "3g antes da corrida/treino", checked: false },
-        { id: 3, name: "Eletrólitos / Sais", dosage: "1 sachê nos treinos longos de corrida/bike", checked: true }
+        { id: 3, name: "Eletrólitos / Sais", dosage: "1 sachê em treinos longos", checked: true }
       ],
       weightLogs: [
         { date: "10/Out", weight: 80.2 },
@@ -610,23 +664,121 @@
     let appData = JSON.parse(localStorage.getItem('pulsefit_pro_data')) || DEFAULT_DATA;
     let weightChartInstance = null;
 
-    function saveData() {
-      localStorage.setItem('pulsefit_pro_data', JSON.stringify(appData));
-      renderAll();
+    // ================= MOTOR DE CASCATA E RECALCULO =================
+    // Quando qualquer dado muda, a sequência inteira que depende dele é recalculada
+    function recalculateCascade() {
+      const a = appData.athlete;
+      const m = appData.measurements;
+
+      // 1. IMC e Classificação
+      if (a.weight > 0 && a.height > 0) {
+        const heightM = a.height / 100;
+        appData.computed.imc = parseFloat((a.weight / (heightM * heightM)).toFixed(1));
+        
+        let imcClass = "Normal";
+        if (appData.computed.imc < 18.5) imcClass = "Abaixo do peso";
+        else if (appData.computed.imc >= 25 && appData.computed.imc < 29.9) imcClass = "Sobrepeso";
+        else if (appData.computed.imc >= 30) imcClass = "Obesidade";
+        appData.computed.imcClass = imcClass;
+      }
+
+      // 2. TMB (Taxa Metabólica Basal)
+      // Se tiver BF%, usa Katch-McArdle (precisão atlética superior). Senão, Mifflin-St Jeor.
+      if (a.bf && a.bf > 3 && a.bf < 50) {
+        const leanMass = a.weight * (1 - (a.bf / 100));
+        appData.computed.tmb = Math.round(370 + (21.6 * leanMass));
+      } else {
+        let tmb = (10 * a.weight) + (6.25 * a.height) - (5 * a.age);
+        tmb = a.gender === 'male' ? Math.round(tmb + 5) : Math.round(tmb - 161);
+        appData.computed.tmb = tmb;
+      }
+
+      // 3. GET (Gasto Energético Total)
+      appData.computed.get = Math.round(appData.computed.tmb * (a.activityLevel || 1.55));
+
+      // 4. Metas de Macronutrientes
+      // Proteína: 2.0g/kg para preservação e síntese muscular
+      const targetProteinGrams = Math.round(a.weight * 2.0);
+      // Gorduras: 0.9g/kg para equilíbrio hormonal
+      const targetFatGrams = Math.round(a.weight * 0.9);
+      // Carboidratos: preenche o restante calórico (GET - (prot*4 + gord*9)) / 4
+      const remainingCals = Math.max(0, appData.computed.get - ((targetProteinGrams * 4) + (targetFatGrams * 9)));
+      const targetCarbsGrams = Math.round(remainingCals / 4);
+
+      appData.computed.macros = {
+        protein: targetProteinGrams,
+        fat: targetFatGrams,
+        carbs: targetCarbsGrams
+      };
+
+      // 5. Hidratação Adaptativa (35ml por kg + adicional por atividade física)
+      const activityBonus = (a.activityLevel >= 1.7) ? 800 : (a.activityLevel >= 1.5) ? 400 : 0;
+      a.waterGoal = Math.round((a.weight * 35) + activityBonus);
+
+      // 6. Relação Cintura-Quadril (RCQ)
+      if (m && m.waist > 0 && m.hip > 0) {
+        appData.computed.rcq = parseFloat((m.waist / m.hip).toFixed(2));
+      } else {
+        appData.computed.rcq = 0;
+      }
     }
 
+    // Salva e notifica outras abas/janelas
+    function saveData(notifyCrossTab = true) {
+      recalculateCascade();
+      localStorage.setItem('pulsefit_pro_data', JSON.stringify(appData));
+      renderAll();
+
+      if (notifyCrossTab && crossTabChannel) {
+        crossTabChannel.postMessage({ type: 'DATA_UPDATED', payload: appData });
+      }
+    }
+
+    // Listener de outras abas / janelas do navegador
+    if (crossTabChannel) {
+      crossTabChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'DATA_UPDATED') {
+          appData = event.data.payload;
+          renderAll();
+          flashSyncIndicator();
+        }
+      };
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'pulsefit_pro_data' && e.newValue) {
+        appData = JSON.parse(e.newValue);
+        renderAll();
+        flashSyncIndicator();
+      }
+    });
+
+    function flashSyncIndicator() {
+      const el = document.getElementById('syncIndicator');
+      if (el) {
+        el.classList.remove('bg-emerald-500');
+        el.classList.add('bg-cyan-400');
+        setTimeout(() => {
+          el.classList.remove('bg-cyan-400');
+          el.classList.add('bg-emerald-500');
+        }, 600);
+      }
+    }
+
+    // Inicialização
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       document.getElementById('currentDate').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+      recalculateCascade();
       renderAll();
       initChart();
-      calculateBiometrics();
     });
 
-    // Navegação de Abas
+    // Navegação entre abas com re-renderização imediata
     function switchTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
+      const targetPane = document.getElementById(tabId);
+      if (targetPane) targetPane.classList.remove('hidden');
 
       document.querySelectorAll('.nav-item').forEach(btn => {
         if (btn.getAttribute('data-target') === tabId) {
@@ -638,55 +790,38 @@
         }
       });
 
-      if (tabId === 'tab-evolution') setTimeout(initChart, 60);
-      if (tabId === 'tab-athlete') calculateBiometrics();
+      if (tabId === 'tab-evolution') setTimeout(initChart, 50);
+      renderAll();
     }
 
-    // ====== CÁLCULO BIOMÉTRICO (IMC, TMB, GET) ======
-    function calculateBiometrics() {
-      const weight = parseFloat(document.getElementById('profWeight').value) || appData.athlete.weight;
-      const height = parseFloat(document.getElementById('profHeight').value) || appData.athlete.height;
-      const age = parseInt(document.getElementById('profAge').value) || appData.athlete.age;
-      const gender = document.getElementById('profGender').value || appData.athlete.gender;
-      const activity = parseFloat(document.getElementById('profActivity').value) || appData.athlete.activityLevel;
+    // Handlers reativos de campos de input (digitar recalcula a cascata em tempo real)
+    function handleBiometricFieldChange() {
+      const name = document.getElementById('profName').value;
+      const gender = document.getElementById('profGender').value;
+      const age = parseInt(document.getElementById('profAge').value) || 0;
+      const height = parseFloat(document.getElementById('profHeight').value) || 0;
+      const weight = parseFloat(document.getElementById('profWeight').value) || 0;
+      const bf = parseFloat(document.getElementById('profBF').value) || 0;
+      const activity = parseFloat(document.getElementById('profActivity').value) || 1.55;
 
-      if (!weight || !height) return;
-
-      // 1. IMC
-      const heightM = height / 100;
-      const imc = (weight / (heightM * heightM)).toFixed(1);
-      document.getElementById('calcIMC').innerText = imc;
-
-      let imcClass = "Normal";
-      if (imc < 18.5) imcClass = "Abaixo";
-      else if (imc >= 25 && imc < 29.9) imcClass = "Sobrepeso";
-      else if (imc >= 30) imcClass = "Obesidade";
-      document.getElementById('calcIMCClass').innerText = imcClass;
-
-      // 2. Taxa Metabólica Basal (Mifflin-St Jeor)
-      let tmb = (10 * weight) + (6.25 * height) - (5 * age);
-      tmb = gender === 'male' ? Math.round(tmb + 5) : Math.round(tmb - 161);
-      document.getElementById('calcTMB').innerText = tmb;
-
-      // 3. Gasto Energético Total (GET)
-      const get = Math.round(tmb * activity);
-      document.getElementById('calcGET').innerText = get;
-    }
-
-    function saveAthleteProfile() {
-      appData.athlete.name = document.getElementById('profName').value || "Atleta";
-      appData.athlete.gender = document.getElementById('profGender').value;
-      appData.athlete.age = parseInt(document.getElementById('profAge').value) || 25;
-      appData.athlete.height = parseFloat(document.getElementById('profHeight').value) || 175;
-      appData.athlete.weight = parseFloat(document.getElementById('profWeight').value) || 75;
-      appData.athlete.bf = parseFloat(document.getElementById('profBF').value) || 0;
-      appData.athlete.activityLevel = parseFloat(document.getElementById('profActivity').value) || 1.55;
+      appData.athlete.name = name || "Atleta";
+      appData.athlete.gender = gender;
+      if (age > 0) appData.athlete.age = age;
+      if (height > 0) appData.athlete.height = height;
+      if (weight > 0) {
+        appData.athlete.weight = weight;
+        // Atualiza a pesagem mais recente para manter histórico coerente
+        if (appData.weightLogs.length > 0) {
+          appData.weightLogs[appData.weightLogs.length - 1].weight = weight;
+        }
+      }
+      appData.athlete.bf = bf;
+      appData.athlete.activityLevel = activity;
 
       saveData();
-      alert('Perfil do atleta salvo com sucesso!');
     }
 
-    function saveFullMeasurements() {
+    function handleMeasurementFieldChange() {
       appData.measurements = {
         neck: parseFloat(document.getElementById('mNeck').value) || 0,
         chest: parseFloat(document.getElementById('mChest').value) || 0,
@@ -700,65 +835,64 @@
         calf: parseFloat(document.getElementById('mCalf').value) || 0
       };
       saveData();
-      alert('Medidas antropométricas atualizadas!');
     }
 
-    // ====== RENDERIZAÇÃO GERAL ======
+    // ================= RENDERIZAÇÃO GERAL SINCRONIZADA =================
     function renderAll() {
-      // Perfil
-      document.getElementById('userNameHeader').innerText = appData.athlete.name;
-      document.getElementById('profName').value = appData.athlete.name;
-      document.getElementById('profGender').value = appData.athlete.gender;
-      document.getElementById('profAge').value = appData.athlete.age;
-      document.getElementById('profHeight').value = appData.athlete.height;
-      document.getElementById('profWeight').value = appData.athlete.weight;
-      document.getElementById('profBF').value = appData.athlete.bf || '';
-      document.getElementById('profActivity').value = appData.athlete.activityLevel;
+      const a = appData.athlete;
+      const c = appData.computed;
+      const m = appData.measurements;
 
-      // Medidas
-      document.getElementById('mNeck').value = appData.measurements.neck || '';
-      document.getElementById('mChest').value = appData.measurements.chest || '';
-      document.getElementById('mWaist').value = appData.measurements.waist || '';
-      document.getElementById('mAbdomen').value = appData.measurements.abdomen || '';
-      document.getElementById('mHip').value = appData.measurements.hip || '';
-      document.getElementById('mArmR').value = appData.measurements.armR || '';
-      document.getElementById('mArmL').value = appData.measurements.armL || '';
-      document.getElementById('mThighR').value = appData.measurements.thighR || '';
-      document.getElementById('mThighL').value = appData.measurements.thighL || '';
-      document.getElementById('mCalf').value = appData.measurements.calf || '';
+      // 1. Header & Badges
+      document.getElementById('userNameHeader').innerText = a.name;
+
+      // 2. Aba "Hoje" - Painel Rápido Interativo
+      document.getElementById('todayQuickCalories').innerText = `${c.get} kcal`;
+      document.getElementById('todayQuickProtein').innerText = `${c.macros.protein}g`;
+      document.getElementById('todayQuickIMC').innerText = `${c.imc} (${c.imcClass})`;
 
       // Hidratação
-      const goal = appData.athlete.waterGoal || 3000;
       document.getElementById('waterCurrentText').innerText = appData.waterCurrent;
-      document.getElementById('waterGoalText').innerText = goal;
-      const pct = Math.min(100, Math.round((appData.waterCurrent / goal) * 100));
+      document.getElementById('waterGoalText').innerText = a.waterGoal;
+      const pct = Math.min(100, Math.round((appData.waterCurrent / a.waterGoal) * 100));
       document.getElementById('waterPercent').innerText = `${pct}%`;
       document.getElementById('waterProgressBar').style.width = `${pct}%`;
 
-      // Treino de Hoje (Preview)
+      // Treino Ativo do Dia (sincronizado com seleção da aba Treinos)
       const currentSplit = appData.workoutSplits.find(s => s.id === appData.activeSplitId) || appData.workoutSplits[0];
       if (currentSplit) {
         document.getElementById('currentWorkoutTitle').innerText = currentSplit.title;
-        document.getElementById('quickWorkoutList').innerHTML = currentSplit.activities.slice(0, 3).map(a => `
-          <div class="flex justify-between items-center bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-800 text-xs">
-            <div>
-              <span class="font-medium text-white">${a.name}</span>
+        const iconContainer = document.getElementById('todayModalityIcon');
+        const iconName = currentSplit.modality === 'running' ? 'flame' : currentSplit.modality === 'indoor_bike' || currentSplit.modality === 'cycling' ? 'zap' : 'dumbbell';
+        iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i>`;
+
+        const quickList = document.getElementById('quickWorkoutList');
+        if (currentSplit.activities.length === 0) {
+          quickList.innerHTML = `<p class="text-zinc-500 py-1">Nenhum exercício cadastrado nesta divisão.</p>`;
+        } else {
+          quickList.innerHTML = currentSplit.activities.slice(0, 3).map(act => `
+            <div class="flex justify-between items-center bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-800 text-xs">
+              <span class="font-medium text-white">${act.name}</span>
+              <span class="text-zinc-400 font-semibold">${act.param1} • ${act.param2}</span>
             </div>
-            <span class="text-zinc-400 font-semibold">${a.param1} • ${a.param2}</span>
-          </div>
-        `).join('');
+          `).join('');
+        }
       }
 
-      // Suplementos & Refeições no Dashboard
-      renderDashboardChecklists();
+      // Checklists em "Hoje"
+      renderTodayChecklists();
 
-      // Treinos e Divisões
+      // 3. Aba "Treinos"
       renderWorkoutsTab();
 
-      // Refeições Tab Dieta
+      // 4. Aba "Dieta"
+      document.getElementById('dietTotalCalories').innerText = `${c.get} kcal`;
+      document.getElementById('macroProtein').innerText = `${c.macros.protein} g`;
+      document.getElementById('macroCarbs').innerText = `${c.macros.carbs} g`;
+      document.getElementById('macroFat').innerText = `${c.macros.fat} g`;
       renderDietTab();
 
-      // Evolução
+      // 5. Aba "Evolução"
       if (appData.weightLogs.length > 0) {
         const lastW = appData.weightLogs[appData.weightLogs.length - 1].weight;
         document.getElementById('evolutionCurrentWeight').innerText = `${lastW} kg`;
@@ -770,13 +904,56 @@
         </div>
       `).join('');
 
+      // 6. Aba "Atleta" (Inputs e Displays)
+      document.getElementById('calcIMC').innerText = c.imc;
+      document.getElementById('calcIMCClass').innerText = c.imcClass;
+      document.getElementById('calcTMB').innerText = c.tmb;
+      document.getElementById('calcGET').innerText = c.get;
+
+      // Sincroniza valores nos inputs sem perder foco se o usuário estiver digitando
+      syncInputValueIfNotActive('profName', a.name);
+      syncInputValueIfNotActive('profGender', a.gender);
+      syncInputValueIfNotActive('profAge', a.age);
+      syncInputValueIfNotActive('profHeight', a.height);
+      syncInputValueIfNotActive('profWeight', a.weight);
+      syncInputValueIfNotActive('profBF', a.bf || '');
+      syncInputValueIfNotActive('profActivity', a.activityLevel);
+
+      // Medidas
+      syncInputValueIfNotActive('mNeck', m.neck || '');
+      syncInputValueIfNotActive('mChest', m.chest || '');
+      syncInputValueIfNotActive('mWaist', m.waist || '');
+      syncInputValueIfNotActive('mAbdomen', m.abdomen || '');
+      syncInputValueIfNotActive('mHip', m.hip || '');
+      syncInputValueIfNotActive('mArmR', m.armR || '');
+      syncInputValueIfNotActive('mArmL', m.armL || '');
+      syncInputValueIfNotActive('mThighR', m.thighR || '');
+      syncInputValueIfNotActive('mThighL', m.thighL || '');
+      syncInputValueIfNotActive('mCalf', m.calf || '');
+
+      // RCQ Badge
+      if (c.rcq > 0) {
+        const rcqRisk = (a.gender === 'male' && c.rcq > 0.90) || (a.gender === 'female' && c.rcq > 0.85) ? 'Atenção' : 'Excelente';
+        document.getElementById('rcqBadge').innerText = `${c.rcq} (${rcqRisk})`;
+      } else {
+        document.getElementById('rcqBadge').innerText = '--';
+      }
+
       lucide.createIcons();
     }
 
-    function renderDashboardChecklists() {
+    function syncInputValueIfNotActive(elementId, value) {
+      const el = document.getElementById(elementId);
+      if (el && document.activeElement !== el) {
+        el.value = value;
+      }
+    }
+
+    // ====== CHECKLISTS SINCRONIZADOS ======
+    function renderTodayChecklists() {
       // Suplementos
-      const suppCount = appData.supplements.filter(s => s.checked).length;
-      document.getElementById('supplementsCounter').innerText = `${suppCount}/${appData.supplements.length}`;
+      const suppDone = appData.supplements.filter(s => s.checked).length;
+      document.getElementById('supplementsCounter').innerText = `${suppDone}/${appData.supplements.length}`;
       document.getElementById('todaySupplementsList').innerHTML = appData.supplements.map(s => `
         <div onclick="toggleSupplement(${s.id})" class="flex items-center justify-between p-2.5 rounded-2xl border transition cursor-pointer ${s.checked ? 'bg-brand/10 border-brand/30 text-white' : 'bg-zinc-800/40 border-zinc-800 text-zinc-300'}">
           <div>
@@ -790,6 +967,8 @@
       `).join('');
 
       // Refeições
+      const mealsDone = appData.meals.filter(m => m.checked).length;
+      document.getElementById('mealsCounter').innerText = `${mealsDone}/${appData.meals.length}`;
       document.getElementById('todayMealsChecklist').innerHTML = appData.meals.map(m => `
         <div onclick="toggleMeal(${m.id})" class="flex items-center justify-between p-2.5 rounded-2xl border transition cursor-pointer ${m.checked ? 'bg-brand/10 border-brand/30' : 'bg-zinc-800/40 border-zinc-800'}">
           <div>
@@ -806,7 +985,7 @@
       `).join('');
     }
 
-    // ====== ABA TREINOS & MULTIMODALIDADES ======
+    // ====== TREINOS, ATIVIDADES E PASTAS ======
     function renderWorkoutsTab() {
       const splitSelector = document.getElementById('splitSelector');
       splitSelector.innerHTML = appData.workoutSplits.map(s => `
@@ -839,7 +1018,7 @@
               <span class="text-zinc-300 font-semibold">${a.param2}</span>
             </div>
           </div>
-          <button onclick="deleteActivity(${a.id})" class="text-zinc-600 hover:text-rose-400 p-1.5">
+          <button onclick="deleteActivity(${a.id})" class="text-zinc-600 hover:text-rose-400 p-1.5 transition">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
@@ -848,12 +1027,11 @@
 
     function selectSplit(id) {
       appData.activeSplitId = id;
-      renderWorkoutsTab();
       saveData();
     }
 
     function addNewCustomRoutine() {
-      const title = prompt("Digite o nome da nova pasta / divisão (Ex: 'Treino E - Corrida Longão'):");
+      const title = prompt("Digite o nome da nova pasta / divisão (Ex: 'Treino E - Funcional / Core'):");
       if (!title) return;
       const newId = String.fromCharCode(65 + appData.workoutSplits.length);
       appData.workoutSplits.push({
@@ -874,7 +1052,6 @@
       }
     }
 
-    // Modal Campos Dinâmicos por Modalidade
     function adaptModalFields() {
       const type = document.getElementById('newExType').value;
       const l1 = document.getElementById('labelParam1');
@@ -884,16 +1061,16 @@
 
       if (type === 'running') {
         l1.innerText = "Distância (km)"; p1.placeholder = "Ex: 6.5 km";
-        l2.innerText = "Pace / Tempo"; p2.placeholder = "Ex: 5:15 min/km ou 35 min";
+        l2.innerText = "Pace / Tempo"; p2.placeholder = "Ex: 5:15 min/km";
       } else if (type === 'indoor_bike') {
-        l1.innerText = "Duração / Séries"; p1.placeholder = "Ex: 45 min";
+        l1.innerText = "Duração / Séries"; p1.placeholder = "Ex: 40 min";
         l2.innerText = "Cadência (RPM) / Carga"; p2.placeholder = "Ex: 90 RPM / Carga 5";
       } else if (type === 'cycling') {
         l1.innerText = "Distância / Tempo"; p1.placeholder = "Ex: 30 km";
-        l2.innerText = "Velocidade Média / Watts"; p2.placeholder = "Ex: 27 km/h";
+        l2.innerText = "Velocidade Média / Watts"; p2.placeholder = "Ex: 28 km/h";
       } else if (type === 'calisthenics') {
         l1.innerText = "Séries x Repetições"; p1.placeholder = "Ex: 4x12 reps";
-        l2.innerText = "Isometria / Sobrecarga"; p2.placeholder = "Ex: Peso do corpo ou +5kg";
+        l2.innerText = "Isometria / Sobrecarga"; p2.placeholder = "Ex: Peso do corpo";
       } else {
         l1.innerText = "Séries x Repetições"; p1.placeholder = "Ex: 4x10";
         l2.innerText = "Carga"; p2.placeholder = "Ex: 30kg";
@@ -906,7 +1083,7 @@
       const p1 = document.getElementById('newExParam1').value.trim();
       const p2 = document.getElementById('newExParam2').value.trim();
 
-      if (!name) return alert('Dê um nome para o exercício ou atividade.');
+      if (!name) return alert('Dê um nome para a atividade.');
 
       const split = appData.workoutSplits.find(s => s.id === appData.activeSplitId);
       if (split) {
@@ -926,28 +1103,27 @@
       saveData();
     }
 
-    // ====== PRESETS DE PLANILHAS PRONTAS ======
     function applyPresetRoutine(presetKey) {
       if (!confirm("Deseja adicionar este modelo pronto à sua lista de treinos?")) return;
 
       if (presetKey === 'hybrid') {
         appData.workoutSplits.push({
           id: 'H1',
-          title: 'Híbrido: Força & Corrida 5K',
+          title: 'Treino Híbrido - Força & Corrida 5K',
           modality: 'hybrid',
           activities: [
-            { id: Date.now()+1, type: 'gym', name: 'Agachamento Livre com Barra', param1: '4x6 reps', param2: 'Força Máxima' },
-            { id: Date.now()+2, type: 'gym', name: 'Supino Reto + Remada Pendlay', param1: '4x8 reps', param2: 'Supersérie' },
+            { id: Date.now()+1, type: 'gym', name: 'Agachamento Livre c/ Barra', param1: '4x6 reps', param2: 'Força Máxima' },
+            { id: Date.now()+2, type: 'gym', name: 'Supino Reto + Remada Curvada', param1: '4x8 reps', param2: 'Supersérie' },
             { id: Date.now()+3, type: 'running', name: 'Tiros Intervalados 400m (x6)', param1: '2.4 km', param2: 'Pace 4:10' }
           ]
         });
       } else if (presetKey === 'calisthenics') {
         appData.workoutSplits.push({
           id: 'CAL',
-          title: 'Calistenia Completa & Core',
+          title: 'Treino Calistenia & Core Funcional',
           modality: 'calisthenics',
           activities: [
-            { id: Date.now()+1, type: 'calisthenics', name: 'Muscle-up ou Barra Pronada', param1: '4x6 reps', param2: 'Sem impulso' },
+            { id: Date.now()+1, type: 'calisthenics', name: 'Barra Fixa Estrita', param1: '4x8 reps', param2: 'Sem impulso' },
             { id: Date.now()+2, type: 'calisthenics', name: 'Paralelas com Pausa', param1: '4x10 reps', param2: 'Pausa 2s em baixo' },
             { id: Date.now()+3, type: 'calisthenics', name: 'L-Sit na Paralela', param1: '4x20s', param2: 'Isometria' }
           ]
@@ -955,10 +1131,10 @@
       } else if (presetKey === 'cycling') {
         appData.workoutSplits.push({
           id: 'CYC',
-          title: 'Endurance: Bike Indoor & Giro',
+          title: 'Treino Giro Bike & Limiar',
           modality: 'indoor_bike',
           activities: [
-            { id: Date.now()+1, type: 'indoor_bike', name: 'Aquecimento Progressivo', param1: '10 min', param2: '70-90 RPM' },
+            { id: Date.now()+1, type: 'indoor_bike', name: 'Aquecimento Progressivo', param1: '10 min', param2: '75-90 RPM' },
             { id: Date.now()+2, type: 'indoor_bike', name: 'Bloco Sweet Spot / Limiar', param1: '3x8 min', param2: 'Carga Alta / 85 RPM' },
             { id: Date.now()+3, type: 'indoor_bike', name: 'Giro Regenerativo', param1: '10 min', param2: 'Giro leve' }
           ]
@@ -966,7 +1142,7 @@
       } else if (presetKey === 'running') {
         appData.workoutSplits.push({
           id: 'RUN',
-          title: 'Corrida: Longão de Sábado',
+          title: 'Treino Corrida Longão Z2',
           modality: 'running',
           activities: [
             { id: Date.now()+1, type: 'running', name: 'Mobilidade Tornozelo & Glúteos', param1: '5 min', param2: 'Aquecimento' },
@@ -977,7 +1153,6 @@
 
       appData.activeSplitId = appData.workoutSplits[appData.workoutSplits.length - 1].id;
       saveData();
-      alert('Planilha pronta adicionada com sucesso!');
     }
 
     // ====== PLANILHAS & BACKUPS ======
@@ -994,7 +1169,6 @@
       let count = 0;
       lines.forEach(line => {
         if (!line.trim()) return;
-        // Tenta separar no formato: "Nome: Séries - Carga" ou só "Nome"
         let name = line;
         let p1 = "3x10";
         let p2 = "Carga padrão";
@@ -1025,7 +1199,7 @@
       document.getElementById('sheetPasteArea').value = '';
       closeModal('modalSheet');
       saveData();
-      alert(`${count} exercícios/atividades foram importados para o treino atual!`);
+      alert(`${count} atividades importadas com sucesso para a divisão atual!`);
     }
 
     function exportJSONBackup() {
@@ -1051,18 +1225,18 @@
             saveData();
             initChart();
             closeModal('modalSheet');
-            alert('Backup e planilhas restaurados com sucesso!');
+            alert('Dados restaurados e sincronizados com sucesso!');
           } else {
-            alert('Arquivo JSON inválido para o PulseFit.');
+            alert('Arquivo JSON inválido.');
           }
         } catch (err) {
-          alert('Erro ao ler arquivo JSON.');
+          alert('Erro ao carregar o backup.');
         }
       };
       reader.readAsText(file);
     }
 
-    // ====== EVOLUÇÃO (CHART.JS) ======
+    // ====== EVOLUÇÃO (CHART.JS) & PESAGEM ======
     function initChart() {
       const ctx = document.getElementById('weightChart');
       if (!ctx) return;
@@ -1097,31 +1271,46 @@
     }
 
     function openWeightModal() { openModal('modalWeight'); }
+
+    // Ao registrar novo peso: cascata para Perfil, Gráfico, TMB, GET e Dieta
     function confirmWeight() {
       const w = parseFloat(document.getElementById('newWeightInput').value);
-      if (!w) return alert('Digite um valor de peso.');
+      if (!w || w <= 0) return alert('Digite um valor de peso válido.');
+      
       const dateStr = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
       appData.weightLogs.push({ date: dateStr, weight: w });
       appData.athlete.weight = w;
+      
       document.getElementById('newWeightInput').value = '';
       closeModal('modalWeight');
+      
       saveData();
       initChart();
     }
 
-    // ====== DIETA, SUPLEMENTOS & ÁGUA ======
-    function addWater(qtd) { appData.waterCurrent += qtd; saveData(); }
-    function resetWater() { appData.waterCurrent = 0; saveData(); }
+    // ====== DIETA, SUPLEMENTOS & HIDRATAÇÃO ======
+    function addWater(qtd) {
+      appData.waterCurrent += qtd;
+      saveData();
+    }
+
+    function resetWater() {
+      appData.waterCurrent = 0;
+      saveData();
+    }
+
     function toggleSupplement(id) {
       const s = appData.supplements.find(x => x.id === id);
       if (s) s.checked = !s.checked;
       saveData();
     }
+
     function toggleMeal(id) {
       const m = appData.meals.find(x => x.id === id);
       if (m) m.checked = !m.checked;
       saveData();
     }
+
     function renderDietTab() {
       document.getElementById('mealsContainer').innerHTML = appData.meals.map(m => `
         <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-3 flex justify-between items-start">
@@ -1132,7 +1321,7 @@
             </div>
             <p class="text-xs text-zinc-400">${m.desc}</p>
           </div>
-          <button onclick="deleteMeal(${m.id})" class="text-zinc-600 hover:text-rose-400 p-1">
+          <button onclick="deleteMeal(${m.id})" class="text-zinc-600 hover:text-rose-400 p-1 transition">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
@@ -1144,12 +1333,13 @@
             <strong class="text-zinc-200">${s.name}</strong>
             <p class="text-zinc-500 text-[11px]">${s.dosage}</p>
           </div>
-          <button onclick="deleteSupplement(${s.id})" class="text-zinc-600 hover:text-rose-400 p-1">
+          <button onclick="deleteSupplement(${s.id})" class="text-zinc-600 hover:text-rose-400 p-1 transition">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
           </button>
         </div>
       `).join('');
     }
+
     function openAddMealModal() { openModal('modalAddMeal'); }
     function confirmAddMeal() {
       const name = document.getElementById('newMealName').value.trim();
@@ -1160,7 +1350,11 @@
       closeModal('modalAddMeal');
       saveData();
     }
-    function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); saveData(); }
+    function deleteMeal(id) {
+      appData.meals = appData.meals.filter(m => m.id !== id);
+      saveData();
+    }
+
     function openAddSupplementModal() { openModal('modalAddSupplement'); }
     function confirmAddSupplement() {
       const name = document.getElementById('newSuppName').value.trim();
@@ -1170,9 +1364,12 @@
       closeModal('modalAddSupplement');
       saveData();
     }
-    function deleteSupplement(id) { appData.supplements = appData.supplements.filter(s => s.id !== id); saveData(); }
+    function deleteSupplement(id) {
+      appData.supplements = appData.supplements.filter(s => s.id !== id);
+      saveData();
+    }
 
-    // Helpers Modais
+    // Modais Utilitários
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function openAddExerciseModal() { adaptModalFields(); openModal('modalAddExercise'); }
