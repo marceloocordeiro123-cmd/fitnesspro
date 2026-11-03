@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PulseFit - Sua Rotina Inteligente</title>
+  
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js para o gráfico de evolução -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#10b981', // Verde esmeralda fitness
+            brandLight: '#34d399',
+            darkBg: '#09090b',
+            darkSurface: '#18181b',
+            darkCard: '#27272a',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Ocultar barra de rolagem mantendo a navegação suave */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    body {
+      background-color: #09090b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="text-zinc-100 flex justify-center bg-black min-h-screen">
+
+  <!-- Mobile Container Wrapper -->
+  <div id="app" class="w-full max-w-md h-screen flex flex-col bg-darkBg relative overflow-hidden shadow-2xl border-x border-zinc-800/40">
+
+    <!-- Top Safe Header -->
+    <header class="px-5 pt-6 pb-3 flex justify-between items-center bg-darkBg/80 backdrop-blur-md sticky top-0 z-30 border-b border-zinc-850">
+      <div>
+        <p class="text-xs font-semibold text-brand tracking-wider uppercase" id="currentDate">HOJE</p>
+        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+          Olá, <span id="userNameHeader" class="text-white">Atleta</span> 👋
+        </h1>
+      </div>
+      <button onclick="switchTab('tab-settings')" class="w-10 h-10 rounded-full bg-darkSurface flex items-center justify-center border border-zinc-700/50 hover:bg-zinc-800 transition">
+        <i data-lucide="settings" class="w-5 h-5 text-zinc-400"></i>
+      </button>
+    </header>
+
+    <!-- Scrollable Content Screen -->
+    <main class="flex-1 overflow-y-auto no-scrollbar pb-28 px-4 pt-3 space-y-5">
+
+      <!-- ================= ABA 1: HOJE (DASHBOARD) ================= -->
+      <section id="tab-today" class="tab-pane space-y-4">
+        
+        <!-- Hidratação Card -->
+        <div class="bg-gradient-to-br from-darkSurface to-zinc-900 border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+                <i data-lucide="droplet" class="w-5 h-5 fill-cyan-400"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold">Hidratação</h3>
+                <p class="text-xs text-zinc-400"><span id="waterCurrentText">0</span> / <span id="waterGoalText">3000</span> ml</p>
+              </div>
+            </div>
+            <span id="waterPercent" class="text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300">0%</span>
+          </div>
+
+          <!-- Barra de progresso -->
+          <div class="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden mb-4">
+            <div id="waterProgressBar" class="bg-gradient-to-r from-cyan-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+
+          <!-- Quick Water Add Buttons -->
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="addWater(250)" class="py-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-xs font-semibold text-zinc-200 active:scale-95 transition flex items-center justify-center gap-1">
+              +250ml
+            </button>
+            <button onclick="addWater(500)" class="py-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-xs font-semibold text-zinc-200 active:scale-95 transition flex items-center justify-center gap-1">
+              +500ml
+            </button>
+            <button onclick="resetWater()" class="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl text-xs font-semibold text-rose-400 active:scale-95 transition">
+              Zerar
+            </button>
+          </div>
+        </div>
+
+        <!-- Treino do Dia (Preview) -->
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
+                <i data-lucide="dumbbell" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold">Treino Recomendado</h3>
+                <p class="text-xs text-zinc-400" id="currentWorkoutTitle">Treino A - Peito & Tríceps</p>
+              </div>
+            </div>
+            <button onclick="switchTab('tab-workouts')" class="text-xs font-medium text-brand hover:underline">Ver ficha</button>
+          </div>
+          <div id="quickWorkoutList" class="space-y-2 text-sm text-zinc-300">
+            <!-- Injetado via JS -->
+          </div>
+        </div>
+
+        <!-- Suplementação do Dia -->
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                <i data-lucide="pill" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-sm font-semibold">Suplementos do Dia</h3>
+            </div>
+            <span class="text-xs text-zinc-500" id="supplementsCounter">0 concluídos</span>
+          </div>
+          <div id="todaySupplementsList" class="space-y-2">
+            <!-- Injetado via JS -->
+          </div>
+        </div>
+
+        <!-- Refeições Checklist Rápido -->
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                <i data-lucide="utensils" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-sm font-semibold">Refeições de Hoje</h3>
+            </div>
+            <button onclick="switchTab('tab-diet')" class="text-xs font-medium text-brand hover:underline">Detalhes</button>
+          </div>
+          <div id="todayMealsChecklist" class="space-y-2">
+            <!-- Injetado via JS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= ABA 2: TREINOS ================= -->
+      <section id="tab-workouts" class="tab-pane hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold">Minhas Fichas</h2>
+            <p class="text-xs text-zinc-400">Personalize seus exercícios e séries</p>
+          </div>
+          <button onclick="openAddExerciseModal()" class="px-3.5 py-2 bg-brand hover:bg-brandLight text-black font-semibold text-xs rounded-2xl flex items-center gap-1.5 shadow-md active:scale-95 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Exercício
+          </button>
+        </div>
+
+        <!-- Seletor de Divisão (Split) -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="splitSelector">
+          <button onclick="selectSplit('A')" class="split-tab px-4 py-2 rounded-2xl text-xs font-bold transition bg-brand text-black" data-split="A">Treino A</button>
+          <button onclick="selectSplit('B')" class="split-tab px-4 py-2 rounded-2xl text-xs font-bold transition bg-darkSurface text-zinc-400 border border-zinc-800" data-split="B">Treino B</button>
+          <button onclick="selectSplit('C')" class="split-tab px-4 py-2 rounded-2xl text-xs font-bold transition bg-darkSurface text-zinc-400 border border-zinc-800" data-split="C">Treino C</button>
+        </div>
+
+        <!-- Exercícios do Split Ativo -->
+        <div id="exercisesContainer" class="space-y-3">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </section>
+
+      <!-- ================= ABA 3: DIETA & SUPLEMENTOS ================= -->
+      <section id="tab-diet" class="tab-pane hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold">Plano Alimentar</h2>
+            <p class="text-xs text-zinc-400">Controle de horários e porções</p>
+          </div>
+          <button onclick="openAddMealModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-semibold text-xs rounded-2xl flex items-center gap-1 shadow-md active:scale-95 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Refeição
+          </button>
+        </div>
+
+        <!-- Lista de Refeições -->
+        <div id="mealsContainer" class="space-y-3">
+          <!-- Injetado dinamicamente -->
+        </div>
+
+        <!-- Seção de Gerenciamento de Suplementos -->
+        <div class="pt-4 border-t border-zinc-800">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-base font-bold">Suplementação</h2>
+            <button onclick="openAddSupplementModal()" class="text-xs text-brand font-semibold">+ Adicionar</button>
+          </div>
+          <div id="supplementsManagementList" class="space-y-2">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ABA 4: EVOLUÇÃO ================= -->
+      <section id="tab-evolution" class="tab-pane hidden space-y-4">
+        <div>
+          <h2 class="text-lg font-bold">Seu Progresso</h2>
+          <p class="text-xs text-zinc-400">Acompanhamento de peso e medidas</p>
+        </div>
+
+        <!-- Gráfico Card -->
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <span class="text-xs text-zinc-400">Peso Mais Recente</span>
+              <p class="text-2xl font-black text-white" id="currentWeightBadge">-- kg</p>
+            </div>
+            <button onclick="openWeightModal()" class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold rounded-2xl border border-zinc-700 transition">
+              + Registrar Peso
+            </button>
+          </div>
+          <div class="h-44 w-full">
+            <canvas id="weightChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Registro de Medidas Corporais -->
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-semibold">Medidas Rápidas (cm)</h3>
+            <button onclick="saveMeasurements()" class="text-xs text-brand font-bold">Salvar</button>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
+              <label class="text-zinc-400 block mb-1">Braço (Direito)</label>
+              <input type="number" id="measureArm" placeholder="Ex: 38" class="w-full bg-transparent text-sm font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
+              <label class="text-zinc-400 block mb-1">Cintura</label>
+              <input type="number" id="measureWaist" placeholder="Ex: 82" class="w-full bg-transparent text-sm font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
+              <label class="text-zinc-400 block mb-1">Peitoral</label>
+              <input type="number" id="measureChest" placeholder="Ex: 102" class="w-full bg-transparent text-sm font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
+              <label class="text-zinc-400 block mb-1">Coxa</label>
+              <input type="number" id="measureThigh" placeholder="Ex: 58" class="w-full bg-transparent text-sm font-bold text-white outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico Recente de Pesos -->
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+          <h3 class="text-sm font-semibold mb-3">Histórico de Registros</h3>
+          <div id="weightHistoryList" class="space-y-2 text-xs divide-y divide-zinc-800">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ABA 5: AJUSTES / CONFIG ================= -->
+      <section id="tab-settings" class="tab-pane hidden space-y-4">
+        <div>
+          <h2 class="text-lg font-bold">Configurações</h2>
+          <p class="text-xs text-zinc-400">Ajuste seus dados e metas diárias</p>
+        </div>
+
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Seu Nome / Apelido</label>
+            <input type="text" id="settingName" class="w-full bg-zinc-800/70 border border-zinc-700/70 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Meta Diária de Água (ml)</label>
+            <input type="number" id="settingWater" step="100" class="w-full bg-zinc-800/70 border border-zinc-700/70 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
+          </div>
+          <button onclick="saveSettings()" class="w-full py-3 bg-brand hover:bg-brandLight text-black font-bold rounded-2xl text-xs transition active:scale-95 shadow">
+            Salvar Alterações
+          </button>
+        </div>
+
+        <div class="pt-4">
+          <button onclick="resetAllAppData()" class="w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-semibold rounded-2xl text-xs transition active:scale-95">
+            Resetar Todos os Dados
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (App Nativo Style) -->
+    <nav class="absolute bottom-0 left-0 right-0 h-20 bg-darkSurface/95 backdrop-blur-lg border-t border-zinc-800/80 px-4 flex items-center justify-around z-30">
+      <button onclick="switchTab('tab-today')" class="nav-item flex flex-col items-center gap-1 text-brand transition active:scale-90" data-target="tab-today">
+        <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Hoje</span>
+      </button>
+
+      <button onclick="switchTab('tab-workouts')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition active:scale-90" data-target="tab-workouts">
+        <i data-lucide="dumbbell" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Treinos</span>
+      </button>
+
+      <button onclick="switchTab('tab-diet')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition active:scale-90" data-target="tab-diet">
+        <i data-lucide="apple" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Dieta</span>
+      </button>
+
+      <button onclick="switchTab('tab-evolution')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition active:scale-90" data-target="tab-evolution">
+        <i data-lucide="line-chart" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Evolução</span>
+      </button>
+    </nav>
+
+    <!-- ================= MODAIS DE REGISTRO ================= -->
+
+    <!-- Modal Novo Exercício -->
+    <div id="modalAddExercise" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 animate-in slide-in-from-bottom duration-200">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-base">Adicionar Exercício</h3>
+          <button onclick="closeModal('modalAddExercise')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-3">
+          <input type="text" id="newExerciseName" placeholder="Nome do Exercício (ex: Supino Reto)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="newExerciseSeries" placeholder="Séries x Reps (ex: 4x10)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+            <input type="text" id="newExerciseLoad" placeholder="Carga (ex: 30kg)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+          </div>
+        </div>
+        <button onclick="confirmAddExercise()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Adicionar ao Treino</button>
+      </div>
+    </div>
+
+    <!-- Modal Nova Refeição -->
+    <div id="modalAddMeal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-base">Nova Refeição</h3>
+          <button onclick="closeModal('modalAddMeal')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-3">
+          <input type="text" id="newMealName" placeholder="Título (ex: Almoço, Pós-Treino)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+          <input type="time" id="newMealTime" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+          <textarea id="newMealDesc" rows="3" placeholder="Alimentos (ex: 150g Frango, 200g Arroz, Salada)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none"></textarea>
+        </div>
+        <button onclick="confirmAddMeal()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Refeição</button>
+      </div>
+    </div>
+
+    <!-- Modal Novo Suplemento -->
+    <div id="modalAddSupplement" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-base">Novo Suplemento</h3>
+          <button onclick="closeModal('modalAddSupplement')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-3">
+          <input type="text" id="newSuppName" placeholder="Nome (ex: Creatina, Whey, Ômega 3)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+          <input type="text" id="newSuppDosage" placeholder="Dose / Horário (ex: 5g pela manhã)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+        </div>
+        <button onclick="confirmAddSupplement()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Adicionar Suplemento</button>
+      </div>
+    </div>
+
+    <!-- Modal Registrar Peso -->
+    <div id="modalWeight" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-base">Registrar Peso Atual</h3>
+          <button onclick="closeModal('modalWeight')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="space-y-3">
+          <input type="number" step="0.1" id="newWeightInput" placeholder="Ex: 78.5" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+        </div>
+        <button onclick="confirmWeight()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Peso</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= LÓGICA DO APP (JAVASCRIPT) ================= -->
+  <script>
+    // Estado inicial padrão (Default State)
+    const DEFAULT_DATA = {
+      user: { name: 'Atleta', waterGoal: 3000 },
+      waterCurrent: 1250,
+      activeSplit: 'A',
+      workouts: {
+        A: {
+          title: "Treino A - Peito, Ombro e Tríceps",
+          exercises: [
+            { id: 1, name: "Supino Inclinado com Halteres", sets: "4x10", weight: "24kg" },
+            { id: 2, name: "Crucifixo na Polia", sets: "3x12", weight: "15kg" },
+            { id: 3, name: "Desenvolvimento Militar", sets: "4x8", weight: "18kg" },
+            { id: 4, name: "Tríceps Corda", sets: "4x12", weight: "22kg" }
+          ]
+        },
+        B: {
+          title: "Treino B - Costas e Bíceps",
+          exercises: [
+            { id: 5, name: "Puxada Frontal", sets: "4x10", weight: "55kg" },
+            { id: 6, name: "Remada Curvada", sets: "4x8", weight: "40kg" },
+            { id: 7, name: "Rosca Direta Barra W", sets: "3x10", weight: "14kg" }
+          ]
+        },
+        C: {
+          title: "Treino C - Pernas Completo",
+          exercises: [
+            { id: 8, name: "Agachamento Livre", sets: "4x8", weight: "60kg" },
+            { id: 9, name: "Leg Press 45°", sets: "4x12", weight: "160kg" },
+            { id: 10, name: "Mesa Flexora", sets: "3x12", weight: "40kg" }
+          ]
+        }
+      },
+      meals: [
+        { id: 1, name: "Café da Manhã", time: "07:30", desc: "3 ovos mexidos, 2 fatias de pão integral, café preto", checked: true },
+        { id: 2, name: "Almoço", time: "12:30", desc: "150g peito de frango, 150g arroz, salada verde", checked: false },
+        { id: 3, name: "Lanche da Tarde", time: "16:30", desc: "1 dose de whey protein, 1 banana, 30g aveia", checked: false },
+        { id: 4, name: "Jantar", time: "20:00", desc: "150g patinho moído, 150g batata inglesa", checked: false }
+      ],
+      supplements: [
+        { id: 1, name: "Creatina", dosage: "5g após o almoço", checked: true },
+        { id: 2, name: "Whey Protein", dosage: "30g no lanche da tarde", checked: false },
+        { id: 3, name: "Multivitamínico", dosage: "1 cápsula ao acordar", checked: true }
+      ],
+      weightLogs: [
+        { date: "10/Out", weight: 81.2 },
+        { date: "17/Out", weight: 80.8 },
+        { date: "24/Out", weight: 80.1 },
+        { date: "01/Nov", weight: 79.5 }
+      ],
+      measurements: { arm: 38, waist: 83, chest: 101, thigh: 59 }
+    };
+
+    // Carregar estado do localStorage
+    let appData = JSON.parse(localStorage.getItem('pulsefit_data')) || DEFAULT_DATA;
+
+    function saveData() {
+      localStorage.setItem('pulsefit_data', JSON.stringify(appData));
+      renderAll();
+    }
+
+    // Variável do Chart.js
+    let weightChartInstance = null;
+
+    // Inicialização
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initDate();
+      renderAll();
+      initChart();
+    });
+
+    function initDate() {
+      const options = { weekday: 'short', day: 'numeric', month: 'short' };
+      const dateStr = new Date().toLocaleDateString('pt-BR', options);
+      document.getElementById('currentDate').innerText = dateStr.toUpperCase();
+    }
+
+    // Navegação de Abas
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      // Atualizar barra de navegação
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        if (btn.getAttribute('data-target') === tabId) {
+          btn.classList.add('text-brand');
+          btn.classList.remove('text-zinc-500');
+        } else {
+          btn.classList.remove('text-brand');
+          btn.classList.add('text-zinc-500');
+        }
+      });
+
+      if (tabId === 'tab-evolution') {
+        setTimeout(initChart, 50);
+      }
+    }
+
+    // ====== RENDERIZADORES ======
+    function renderAll() {
+      document.getElementById('userNameHeader').innerText = appData.user.name;
+      
+      // 1. Água
+      const waterGoal = appData.user.waterGoal;
+      const currentWater = appData.waterCurrent;
+      document.getElementById('waterCurrentText').innerText = currentWater;
+      document.getElementById('waterGoalText').innerText = waterGoal;
+      const pct = Math.min(100, Math.round((currentWater / waterGoal) * 100));
+      document.getElementById('waterPercent').innerText = `${pct}%`;
+      document.getElementById('waterProgressBar').style.width = `${pct}%`;
+
+      // 2. Treino de Hoje (Preview no Dashboard)
+      const currentSplit = appData.workouts[appData.activeSplit] || appData.workouts['A'];
+      document.getElementById('currentWorkoutTitle').innerText = currentSplit.title;
+      const quickList = document.getElementById('quickWorkoutList');
+      quickList.innerHTML = currentSplit.exercises.slice(0, 3).map(ex => `
+        <div class="flex justify-between items-center bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-800 text-xs">
+          <span class="font-medium">${ex.name}</span>
+          <span class="text-zinc-400 font-semibold">${ex.sets} • ${ex.weight}</span>
+        </div>
+      `).join('');
+
+      // 3. Suplementos do Dia
+      const suppContainer = document.getElementById('todaySupplementsList');
+      const suppCheckedCount = appData.supplements.filter(s => s.checked).length;
+      document.getElementById('supplementsCounter').innerText = `${suppCheckedCount}/${appData.supplements.length}`;
+      
+      suppContainer.innerHTML = appData.supplements.map(s => `
+        <div onclick="toggleSupplement(${s.id})" class="flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer ${s.checked ? 'bg-brand/10 border-brand/30 text-white' : 'bg-zinc-800/40 border-zinc-800 text-zinc-300'}">
+          <div>
+            <p class="text-xs font-bold ${s.checked ? 'line-through text-zinc-400' : ''}">${s.name}</p>
+            <p class="text-[11px] text-zinc-500">${s.dosage}</p>
+          </div>
+          <div class="w-6 h-6 rounded-full flex items-center justify-center border ${s.checked ? 'bg-brand border-brand text-black' : 'border-zinc-600'}">
+            ${s.checked ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+          </div>
+        </div>
+      `).join('');
+
+      // 4. Refeições no Dashboard
+      const mealsTodayContainer = document.getElementById('todayMealsChecklist');
+      mealsTodayContainer.innerHTML = appData.meals.map(m => `
+        <div onclick="toggleMeal(${m.id})" class="flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer ${m.checked ? 'bg-brand/10 border-brand/30' : 'bg-zinc-800/40 border-zinc-800'}">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold ${m.checked ? 'line-through text-zinc-400' : 'text-zinc-200'}">${m.name}</span>
+              <span class="text-[10px] text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">${m.time}</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 truncate max-w-[240px] mt-0.5">${m.desc}</p>
+          </div>
+          <div class="w-6 h-6 rounded-full flex items-center justify-center border ${m.checked ? 'bg-brand border-brand text-black' : 'border-zinc-600'}">
+            ${m.checked ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+          </div>
+        </div>
+      `).join('');
+
+      // 5. Lista de Treinos Aba Treinos
+      renderWorkoutTab();
+
+      // 6. Lista de Refeições e Suplementos Aba Dieta
+      renderDietTab();
+
+      // 7. Dados de Evolução
+      renderEvolutionTab();
+
+      // 8. Ajustes
+      document.getElementById('settingName').value = appData.user.name;
+      document.getElementById('settingWater').value = appData.user.waterGoal;
+
+      lucide.createIcons();
+    }
+
+    // ====== ABA TREINOS ======
+    function selectSplit(splitKey) {
+      appData.activeSplit = splitKey;
+      document.querySelectorAll('.split-tab').forEach(btn => {
+        if (btn.getAttribute('data-split') === splitKey) {
+          btn.classList.add('bg-brand', 'text-black');
+          btn.classList.remove('bg-darkSurface', 'text-zinc-400', 'border');
+        } else {
+          btn.classList.remove('bg-brand', 'text-black');
+          btn.classList.add('bg-darkSurface', 'text-zinc-400', 'border');
+        }
+      });
+      renderWorkoutTab();
+    }
+
+    function renderWorkoutTab() {
+      const current = appData.workouts[appData.activeSplit] || { exercises: [] };
+      const container = document.getElementById('exercisesContainer');
+      
+      if (!current.exercises.length) {
+        container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-8">Nenhum exercício cadastrado neste treino.</p>`;
+        return;
+      }
+
+      container.innerHTML = current.exercises.map(ex => `
+        <div class="bg-darkSurface border border-zinc-800/80 rounded-2xl p-4 flex items-center justify-between shadow">
+          <div>
+            <h4 class="text-sm font-semibold text-white">${ex.name}</h4>
+            <div class="flex items-center gap-3 text-xs text-zinc-400 mt-1">
+              <span><strong class="text-brand">${ex.sets}</strong> séries</span>
+              <span>•</span>
+              <span><strong class="text-zinc-300">${ex.weight}</strong> carga</span>
+            </div>
+          </div>
+          <button onclick="deleteExercise(${ex.id})" class="text-zinc-600 hover:text-rose-400 p-2 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // ====== ABA DIETA & SUPLEMENTOS ======
+    function renderDietTab() {
+      const container = document.getElementById('mealsContainer');
+      container.innerHTML = appData.meals.map(m => `
+        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-4 flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-brand uppercase tracking-wider">${m.time}</span>
+              <span class="text-sm font-bold text-white">${m.name}</span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-1">${m.desc}</p>
+          </div>
+          <button onclick="deleteMeal(${m.id})" class="text-zinc-600 hover:text-rose-400 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+
+      const suppList = document.getElementById('supplementsManagementList');
+      suppList.innerHTML = appData.supplements.map(s => `
+        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-3 flex justify-between items-center text-xs">
+          <div>
+            <strong class="text-zinc-200">${s.name}</strong>
+            <p class="text-zinc-500">${s.dosage}</p>
+          </div>
+          <button onclick="deleteSupplement(${s.id})" class="text-zinc-600 hover:text-rose-400 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // ====== ABA EVOLUÇÃO ======
+    function renderEvolutionTab() {
+      if (appData.weightLogs.length > 0) {
+        const lastWeight = appData.weightLogs[appData.weightLogs.length - 1].weight;
+        document.getElementById('currentWeightBadge').innerText = `${lastWeight} kg`;
+      }
+
+      document.getElementById('measureArm').value = appData.measurements.arm || '';
+      document.getElementById('measureWaist').value = appData.measurements.waist || '';
+      document.getElementById('measureChest').value = appData.measurements.chest || '';
+      document.getElementById('measureThigh').value = appData.measurements.thigh || '';
+
+      const histList = document.getElementById('weightHistoryList');
+      histList.innerHTML = [...appData.weightLogs].reverse().map(l => `
+        <div class="flex justify-between py-2 text-zinc-400">
+          <span>${l.date}</span>
+          <span class="font-bold text-white">${l.weight} kg</span>
+        </div>
+      `).join('');
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('weightChart');
+      if (!ctx) return;
+
+      const labels = appData.weightLogs.map(l => l.date);
+      const data = appData.weightLogs.map(l => l.weight);
+
+      if (weightChartInstance) {
+        weightChartInstance.destroy();
+      }
+
+      weightChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 3,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#71717a', font: { size: 10 } } },
+            y: { grid: { color: '#27272a' }, ticks: { color: '#71717a', font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    // ====== AÇÕES ======
+    function addWater(amount) {
+      appData.waterCurrent += amount;
+      saveData();
+    }
+
+    function resetWater() {
+      appData.waterCurrent = 0;
+      saveData();
+    }
+
+    function toggleSupplement(id) {
+      const item = appData.supplements.find(s => s.id === id);
+      if (item) item.checked = !item.checked;
+      saveData();
+    }
+
+    function toggleMeal(id) {
+      const item = appData.meals.find(m => m.id === id);
+      if (item) item.checked = !item.checked;
+      saveData();
+    }
+
+    // Modal Handlers
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function openAddExerciseModal() { openModal('modalAddExercise'); }
+    function confirmAddExercise() {
+      const name = document.getElementById('newExerciseName').value.trim();
+      const sets = document.getElementById('newExerciseSeries').value.trim();
+      const weight = document.getElementById('newExerciseLoad').value.trim();
+
+      if (!name) return alert('Informe o nome do exercício');
+
+      appData.workouts[appData.activeSplit].exercises.push({
+        id: Date.now(),
+        name,
+        sets: sets || '3x10',
+        weight: weight || '--'
+      });
+
+      document.getElementById('newExerciseName').value = '';
+      document.getElementById('newExerciseSeries').value = '';
+      document.getElementById('newExerciseLoad').value = '';
+      closeModal('modalAddExercise');
+      saveData();
+    }
+
+    function deleteExercise(id) {
+      appData.workouts[appData.activeSplit].exercises = appData.workouts[appData.activeSplit].exercises.filter(e => e.id !== id);
+      saveData();
+    }
+
+    function openAddMealModal() { openModal('modalAddMeal'); }
+    function confirmAddMeal() {
+      const name = document.getElementById('newMealName').value.trim();
+      const time = document.getElementById('newMealTime').value || '12:00';
+      const desc = document.getElementById('newMealDesc').value.trim();
+
+      if (!name) return alert('Informe o nome da refeição');
+
+      appData.meals.push({ id: Date.now(), name, time, desc, checked: false });
+      document.getElementById('newMealName').value = '';
+      document.getElementById('newMealDesc').value = '';
+      closeModal('modalAddMeal');
+      saveData();
+    }
+
+    function deleteMeal(id) {
+      appData.meals = appData.meals.filter(m => m.id !== id);
+      saveData();
+    }
+
+    function openAddSupplementModal() { openModal('modalAddSupplement'); }
+    function confirmAddSupplement() {
+      const name = document.getElementById('newSuppName').value.trim();
+      const dosage = document.getElementById('newSuppDosage').value.trim();
+
+      if (!name) return alert('Informe o suplemento');
+
+      appData.supplements.push({ id: Date.now(), name, dosage: dosage || 'Dose padrão', checked: false });
+      document.getElementById('newSuppName').value = '';
+      document.getElementById('newSuppDosage').value = '';
+      closeModal('modalAddSupplement');
+      saveData();
+    }
+
+    function deleteSupplement(id) {
+      appData.supplements = appData.supplements.filter(s => s.id !== id);
+      saveData();
+    }
+
+    function openWeightModal() { openModal('modalWeight'); }
+    function confirmWeight() {
+      const weight = parseFloat(document.getElementById('newWeightInput').value);
+      if (!weight) return alert('Digite um valor de peso válido.');
+
+      const dateStr = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+      appData.weightLogs.push({ date: dateStr, weight });
+      document.getElementById('newWeightInput').value = '';
+      closeModal('modalWeight');
+      saveData();
+      initChart();
+    }
+
+    function saveMeasurements() {
+      appData.measurements = {
+        arm: document.getElementById('measureArm').value,
+        waist: document.getElementById('measureWaist').value,
+        chest: document.getElementById('measureChest').value,
+        thigh: document.getElementById('measureThigh').value,
+      };
+      saveData();
+      alert('Medidas salvas com sucesso!');
+    }
+
+    function saveSettings() {
+      appData.user.name = document.getElementById('settingName').value || 'Atleta';
+      appData.user.waterGoal = parseInt(document.getElementById('settingWater').value) || 3000;
+      saveData();
+      alert('Ajustes salvos!');
+      switchTab('tab-today');
+    }
+
+    function resetAllAppData() {
+      if (confirm('Tem certeza de que deseja resetar todo o aplicativo para os dados padrão?')) {
+        localStorage.removeItem('pulsefit_data');
+        appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        saveData();
+        initChart();
+      }
+    }
+  </script>
+</body>
+</html>
