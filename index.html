@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>PulseFit - Sua Rotina Inteligente</title>
+  <title>PulseFit Pro - Treinos & Avaliação</title>
   
-  <!-- Tailwind CSS & Lucide Icons -->
+  <!-- Tailwind CSS, Lucide Icons & Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Chart.js para o gráfico de evolução -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
@@ -17,8 +16,10 @@
       theme: {
         extend: {
           colors: {
-            brand: '#10b981', // Verde esmeralda fitness
+            brand: '#10b981', // Verde esmeralda
             brandLight: '#34d399',
+            brandOrange: '#f97316',
+            brandCyan: '#06b6d4',
             darkBg: '#09090b',
             darkSurface: '#18181b',
             darkCard: '#27272a',
@@ -29,13 +30,11 @@
   </script>
 
   <style>
-    /* Ocultar barra de rolagem mantendo a navegação suave */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
     body {
       background-color: #09090b;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -43,432 +42,592 @@
 </head>
 <body class="text-zinc-100 flex justify-center bg-black min-h-screen">
 
-  <!-- Mobile Container Wrapper -->
   <div id="app" class="w-full max-w-md h-screen flex flex-col bg-darkBg relative overflow-hidden shadow-2xl border-x border-zinc-800/40">
 
-    <!-- Top Safe Header -->
-    <header class="px-5 pt-6 pb-3 flex justify-between items-center bg-darkBg/80 backdrop-blur-md sticky top-0 z-30 border-b border-zinc-850">
+    <!-- Top App Header -->
+    <header class="px-5 pt-5 pb-3 flex justify-between items-center bg-darkBg/90 backdrop-blur-md sticky top-0 z-30 border-b border-zinc-800">
       <div>
-        <p class="text-xs font-semibold text-brand tracking-wider uppercase" id="currentDate">HOJE</p>
-        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-          Olá, <span id="userNameHeader" class="text-white">Atleta</span> 👋
+        <p class="text-[11px] font-bold text-brand tracking-wider uppercase" id="currentDate">HOJE</p>
+        <h1 class="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+          <span id="userNameHeader">Atleta</span>
+          <span id="athleteLevelBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-brand border border-brand/20 font-semibold">Atleta Híbrido</span>
         </h1>
       </div>
-      <button onclick="switchTab('tab-settings')" class="w-10 h-10 rounded-full bg-darkSurface flex items-center justify-center border border-zinc-700/50 hover:bg-zinc-800 transition">
-        <i data-lucide="settings" class="w-5 h-5 text-zinc-400"></i>
-      </button>
+      <div class="flex items-center gap-2">
+        <button onclick="openSheetModal()" title="Importar/Exportar Planilha" class="w-9 h-9 rounded-full bg-darkSurface flex items-center justify-center border border-zinc-800 hover:text-brand transition">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 text-zinc-300"></i>
+        </button>
+      </div>
     </header>
 
-    <!-- Scrollable Content Screen -->
-    <main class="flex-1 overflow-y-auto no-scrollbar pb-28 px-4 pt-3 space-y-5">
+    <!-- Conteúdo Rolável -->
+    <main class="flex-1 overflow-y-auto no-scrollbar pb-28 px-4 pt-3 space-y-4">
 
-      <!-- ================= ABA 1: HOJE (DASHBOARD) ================= -->
+      <!-- ================= 1. HOJE ================= -->
       <section id="tab-today" class="tab-pane space-y-4">
         
-        <!-- Hidratação Card -->
-        <div class="bg-gradient-to-br from-darkSurface to-zinc-900 border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+        <!-- Hidratação -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
-                <i data-lucide="droplet" class="w-5 h-5 fill-cyan-400"></i>
+              <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+                <i data-lucide="droplet" class="w-4 h-4 fill-cyan-400"></i>
               </div>
               <div>
-                <h3 class="text-sm font-semibold">Hidratação</h3>
+                <h3 class="text-xs font-bold text-zinc-300">Hidratação Diária</h3>
                 <p class="text-xs text-zinc-400"><span id="waterCurrentText">0</span> / <span id="waterGoalText">3000</span> ml</p>
               </div>
             </div>
-            <span id="waterPercent" class="text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300">0%</span>
+            <span id="waterPercent" class="text-xs font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">0%</span>
           </div>
-
-          <!-- Barra de progresso -->
-          <div class="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden mb-4">
+          <div class="w-full bg-zinc-800 h-2 rounded-full overflow-hidden mb-3">
             <div id="waterProgressBar" class="bg-gradient-to-r from-cyan-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
           </div>
-
-          <!-- Quick Water Add Buttons -->
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="addWater(250)" class="py-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-xs font-semibold text-zinc-200 active:scale-95 transition flex items-center justify-center gap-1">
-              +250ml
-            </button>
-            <button onclick="addWater(500)" class="py-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-xs font-semibold text-zinc-200 active:scale-95 transition flex items-center justify-center gap-1">
-              +500ml
-            </button>
-            <button onclick="resetWater()" class="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl text-xs font-semibold text-rose-400 active:scale-95 transition">
-              Zerar
-            </button>
+            <button onclick="addWater(250)" class="py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-xs font-semibold active:scale-95 transition">+250ml</button>
+            <button onclick="addWater(500)" class="py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-xs font-semibold active:scale-95 transition">+500ml</button>
+            <button onclick="resetWater()" class="py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold active:scale-95 transition">Zerar</button>
           </div>
         </div>
 
-        <!-- Treino do Dia (Preview) -->
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+        <!-- Sessão do Dia / Modalidade Ativa -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-2xl bg-brand/10 text-brand flex items-center justify-center">
-                <i data-lucide="dumbbell" class="w-5 h-5"></i>
-              </div>
+            <div class="flex items-center gap-2">
+              <span id="todayModalityIcon" class="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center font-bold">
+                <i data-lucide="dumbbell" class="w-4 h-4"></i>
+              </span>
               <div>
-                <h3 class="text-sm font-semibold">Treino Recomendado</h3>
-                <p class="text-xs text-zinc-400" id="currentWorkoutTitle">Treino A - Peito & Tríceps</p>
+                <h3 class="text-xs font-bold text-zinc-300">Sessão Programada</h3>
+                <p class="text-xs text-brand font-semibold" id="currentWorkoutTitle">Treino A - Híbrido</p>
               </div>
             </div>
-            <button onclick="switchTab('tab-workouts')" class="text-xs font-medium text-brand hover:underline">Ver ficha</button>
+            <button onclick="switchTab('tab-workouts')" class="text-xs font-medium text-brand hover:underline">Ver Treinos</button>
           </div>
-          <div id="quickWorkoutList" class="space-y-2 text-sm text-zinc-300">
-            <!-- Injetado via JS -->
-          </div>
+          <div id="quickWorkoutList" class="space-y-2 text-xs text-zinc-300"></div>
         </div>
 
-        <!-- Suplementação do Dia -->
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+        <!-- Checklist de Suplementos -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                <i data-lucide="pill" class="w-5 h-5"></i>
-              </div>
-              <h3 class="text-sm font-semibold">Suplementos do Dia</h3>
-            </div>
+            <h3 class="text-xs font-bold text-zinc-300 flex items-center gap-2">
+              <i data-lucide="pill" class="w-4 h-4 text-amber-400"></i> Suplementos do Dia
+            </h3>
             <span class="text-xs text-zinc-500" id="supplementsCounter">0 concluídos</span>
           </div>
-          <div id="todaySupplementsList" class="space-y-2">
-            <!-- Injetado via JS -->
-          </div>
+          <div id="todaySupplementsList" class="space-y-2"></div>
         </div>
 
-        <!-- Refeições Checklist Rápido -->
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
+        <!-- Checklist de Refeições -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
           <div class="flex justify-between items-center mb-3">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <i data-lucide="utensils" class="w-5 h-5"></i>
-              </div>
-              <h3 class="text-sm font-semibold">Refeições de Hoje</h3>
-            </div>
-            <button onclick="switchTab('tab-diet')" class="text-xs font-medium text-brand hover:underline">Detalhes</button>
+            <h3 class="text-xs font-bold text-zinc-300 flex items-center gap-2">
+              <i data-lucide="utensils" class="w-4 h-4 text-emerald-400"></i> Refeições
+            </h3>
+            <button onclick="switchTab('tab-diet')" class="text-xs font-medium text-brand hover:underline">Dieta</button>
           </div>
-          <div id="todayMealsChecklist" class="space-y-2">
-            <!-- Injetado via JS -->
-          </div>
+          <div id="todayMealsChecklist" class="space-y-2"></div>
         </div>
 
       </section>
 
-      <!-- ================= ABA 2: TREINOS ================= -->
+      <!-- ================= 2. TREINOS & MODALIDADES ================= -->
       <section id="tab-workouts" class="tab-pane hidden space-y-4">
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-lg font-bold">Minhas Fichas</h2>
-            <p class="text-xs text-zinc-400">Personalize seus exercícios e séries</p>
+            <h2 class="text-lg font-bold">Rotinas & Modalidades</h2>
+            <p class="text-xs text-zinc-400">Musculação, Corrida, Ciclismo, Calistenia</p>
           </div>
-          <button onclick="openAddExerciseModal()" class="px-3.5 py-2 bg-brand hover:bg-brandLight text-black font-semibold text-xs rounded-2xl flex items-center gap-1.5 shadow-md active:scale-95 transition">
-            <i data-lucide="plus" class="w-4 h-4"></i> Add Exercício
-          </button>
+          <div class="flex gap-2">
+            <button onclick="openAddExerciseModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i> Atividade
+            </button>
+          </div>
         </div>
 
-        <!-- Seletor de Divisão (Split) -->
+        <!-- Seletor de Divisões / Modalidades -->
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="splitSelector">
-          <button onclick="selectSplit('A')" class="split-tab px-4 py-2 rounded-2xl text-xs font-bold transition bg-brand text-black" data-split="A">Treino A</button>
-          <button onclick="selectSplit('B')" class="split-tab px-4 py-2 rounded-2xl text-xs font-bold transition bg-darkSurface text-zinc-400 border border-zinc-800" data-split="B">Treino B</button>
-          <button onclick="selectSplit('C')" class="split-tab px-4 py-2 rounded-2xl text-xs font-bold transition bg-darkSurface text-zinc-400 border border-zinc-800" data-split="C">Treino C</button>
+          <!-- Gerado dinamicamente -->
         </div>
 
-        <!-- Exercícios do Split Ativo -->
-        <div id="exercisesContainer" class="space-y-3">
-          <!-- Injetado dinamicamente -->
+        <!-- Detalhes do Treino Selecionado -->
+        <div class="flex justify-between items-center px-1">
+          <div class="text-xs text-zinc-400">
+            Modalidade: <span id="currentSplitTypeBadge" class="font-bold text-white uppercase bg-zinc-800 px-2 py-0.5 rounded-md">Musculação</span>
+          </div>
+          <button onclick="addNewCustomRoutine()" class="text-xs font-semibold text-brand hover:underline">+ Nova Pasta/Divisão</button>
+        </div>
+
+        <!-- Container de Atividades da Divisão -->
+        <div id="exercisesContainer" class="space-y-2.5"></div>
+
+        <!-- Modelos de Planilhas Rápidas -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 space-y-2">
+          <h4 class="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Adaptar Planilhas Prontas
+          </h4>
+          <p class="text-[11px] text-zinc-400">Carregue um plano completo de treino montado:</p>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="applyPresetRoutine('hybrid')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
+              <p class="text-xs font-bold text-brand">Atleta Híbrido</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Musculação + Corrida 5k/10k</p>
+            </button>
+            <button onclick="applyPresetRoutine('calisthenics')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
+              <p class="text-xs font-bold text-cyan-400">Calistenia & Core</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Barras, flexões & isometrias</p>
+            </button>
+            <button onclick="applyPresetRoutine('cycling')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
+              <p class="text-xs font-bold text-amber-400">Ciclismo & Indoor</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Tiros de potência e giro Z2</p>
+            </button>
+            <button onclick="applyPresetRoutine('running')" class="p-2.5 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl text-left border border-zinc-700/50">
+              <p class="text-xs font-bold text-rose-400">Foco em Corrida</p>
+              <p class="text-[10px] text-zinc-400 leading-tight">Regenerativo, tiros e longão</p>
+            </button>
+          </div>
         </div>
       </section>
 
-      <!-- ================= ABA 3: DIETA & SUPLEMENTOS ================= -->
+      <!-- ================= 3. DIETA & SUPLEMENTOS ================= -->
       <section id="tab-diet" class="tab-pane hidden space-y-4">
         <div class="flex justify-between items-center">
           <div>
-            <h2 class="text-lg font-bold">Plano Alimentar</h2>
-            <p class="text-xs text-zinc-400">Controle de horários e porções</p>
+            <h2 class="text-lg font-bold">Dieta & Nutrição</h2>
+            <p class="text-xs text-zinc-400">Horários, alimentos e suplementação</p>
           </div>
-          <button onclick="openAddMealModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-semibold text-xs rounded-2xl flex items-center gap-1 shadow-md active:scale-95 transition">
+          <button onclick="openAddMealModal()" class="px-3 py-2 bg-brand hover:bg-brandLight text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
             <i data-lucide="plus" class="w-4 h-4"></i> Refeição
           </button>
         </div>
 
-        <!-- Lista de Refeições -->
-        <div id="mealsContainer" class="space-y-3">
-          <!-- Injetado dinamicamente -->
-        </div>
+        <div id="mealsContainer" class="space-y-3"></div>
 
-        <!-- Seção de Gerenciamento de Suplementos -->
-        <div class="pt-4 border-t border-zinc-800">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-base font-bold">Suplementação</h2>
+        <div class="pt-3 border-t border-zinc-800">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-bold">Suplementação</h3>
             <button onclick="openAddSupplementModal()" class="text-xs text-brand font-semibold">+ Adicionar</button>
           </div>
-          <div id="supplementsManagementList" class="space-y-2">
-            <!-- Injetado dinamicamente -->
-          </div>
+          <div id="supplementsManagementList" class="space-y-2"></div>
         </div>
       </section>
 
-      <!-- ================= ABA 4: EVOLUÇÃO ================= -->
+      <!-- ================= 4. EVOLUÇÃO (GRÁFICOS & HISTÓRICO) ================= -->
       <section id="tab-evolution" class="tab-pane hidden space-y-4">
-        <div>
-          <h2 class="text-lg font-bold">Seu Progresso</h2>
-          <p class="text-xs text-zinc-400">Acompanhamento de peso e medidas</p>
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold">Evolução do Peso</h2>
+            <p class="text-xs text-zinc-400">Gráfico dinâmico e registros</p>
+          </div>
+          <button onclick="openWeightModal()" class="px-3 py-2 bg-brand text-black font-bold text-xs rounded-xl flex items-center gap-1 active:scale-95 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Pesar
+          </button>
         </div>
 
-        <!-- Gráfico Card -->
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <span class="text-xs text-zinc-400">Peso Mais Recente</span>
-              <p class="text-2xl font-black text-white" id="currentWeightBadge">-- kg</p>
-            </div>
-            <button onclick="openWeightModal()" class="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold rounded-2xl border border-zinc-700 transition">
-              + Registrar Peso
-            </button>
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
+          <div class="flex justify-between items-baseline mb-3">
+            <span class="text-xs text-zinc-400">Último Peso Registrado</span>
+            <span class="text-2xl font-black text-white" id="evolutionCurrentWeight">-- kg</span>
           </div>
           <div class="h-44 w-full">
             <canvas id="weightChart"></canvas>
           </div>
         </div>
 
-        <!-- Registro de Medidas Corporais -->
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg space-y-3">
-          <div class="flex justify-between items-center">
-            <h3 class="text-sm font-semibold">Medidas Rápidas (cm)</h3>
-            <button onclick="saveMeasurements()" class="text-xs text-brand font-bold">Salvar</button>
-          </div>
-          <div class="grid grid-cols-2 gap-3 text-xs">
-            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
-              <label class="text-zinc-400 block mb-1">Braço (Direito)</label>
-              <input type="number" id="measureArm" placeholder="Ex: 38" class="w-full bg-transparent text-sm font-bold text-white outline-none">
-            </div>
-            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
-              <label class="text-zinc-400 block mb-1">Cintura</label>
-              <input type="number" id="measureWaist" placeholder="Ex: 82" class="w-full bg-transparent text-sm font-bold text-white outline-none">
-            </div>
-            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
-              <label class="text-zinc-400 block mb-1">Peitoral</label>
-              <input type="number" id="measureChest" placeholder="Ex: 102" class="w-full bg-transparent text-sm font-bold text-white outline-none">
-            </div>
-            <div class="bg-zinc-800/50 p-2.5 rounded-2xl border border-zinc-700/50">
-              <label class="text-zinc-400 block mb-1">Coxa</label>
-              <input type="number" id="measureThigh" placeholder="Ex: 58" class="w-full bg-transparent text-sm font-bold text-white outline-none">
-            </div>
-          </div>
-        </div>
-
-        <!-- Histórico Recente de Pesos -->
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg">
-          <h3 class="text-sm font-semibold mb-3">Histórico de Registros</h3>
-          <div id="weightHistoryList" class="space-y-2 text-xs divide-y divide-zinc-800">
-            <!-- Injetado dinamicamente -->
-          </div>
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg">
+          <h3 class="text-xs font-bold text-zinc-300 mb-2">Histórico de Pesagens</h3>
+          <div id="weightHistoryList" class="space-y-1.5 text-xs divide-y divide-zinc-800/80"></div>
         </div>
       </section>
 
-      <!-- ================= ABA 5: AJUSTES / CONFIG ================= -->
-      <section id="tab-settings" class="tab-pane hidden space-y-4">
+      <!-- ================= 5. ATLETA (AVALIAÇÃO COMPLETA) ================= -->
+      <section id="tab-athlete" class="tab-pane hidden space-y-4">
         <div>
-          <h2 class="text-lg font-bold">Configurações</h2>
-          <p class="text-xs text-zinc-400">Ajuste seus dados e metas diárias</p>
+          <h2 class="text-lg font-bold">Perfil & Avaliação Física</h2>
+          <p class="text-xs text-zinc-400">Dados biométricos, IMC, TMB e medidas antropométricas</p>
         </div>
 
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-3xl p-5 shadow-lg space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-zinc-400 mb-1">Seu Nome / Apelido</label>
-            <input type="text" id="settingName" class="w-full bg-zinc-800/70 border border-zinc-700/70 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
+        <!-- Painel de Cálculos Automáticos (IMC / TMB / GET) -->
+        <div class="bg-gradient-to-br from-darkSurface to-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-zinc-800/60 p-2.5 rounded-2xl border border-zinc-700/50">
+              <span class="text-[10px] text-zinc-400 uppercase font-semibold">IMC</span>
+              <p class="text-lg font-black text-brand" id="calcIMC">--</p>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-700 font-bold text-zinc-300" id="calcIMCClass">--</span>
+            </div>
+
+            <div class="bg-zinc-800/60 p-2.5 rounded-2xl border border-zinc-700/50">
+              <span class="text-[10px] text-zinc-400 uppercase font-semibold">Metabolismo (TMB)</span>
+              <p class="text-lg font-black text-cyan-400" id="calcTMB">--</p>
+              <span class="text-[9px] text-zinc-500">kcal/dia basal</span>
+            </div>
+
+            <div class="bg-zinc-800/60 p-2.5 rounded-2xl border border-zinc-700/50">
+              <span class="text-[10px] text-zinc-400 uppercase font-semibold">Gasto Total (GET)</span>
+              <p class="text-lg font-black text-amber-400" id="calcGET">--</p>
+              <span class="text-[9px] text-zinc-500">kcal com treino</span>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-zinc-400 mb-1">Meta Diária de Água (ml)</label>
-            <input type="number" id="settingWater" step="100" class="w-full bg-zinc-800/70 border border-zinc-700/70 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand">
-          </div>
-          <button onclick="saveSettings()" class="w-full py-3 bg-brand hover:bg-brandLight text-black font-bold rounded-2xl text-xs transition active:scale-95 shadow">
-            Salvar Alterações
-          </button>
         </div>
 
-        <div class="pt-4">
-          <button onclick="resetAllAppData()" class="w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-semibold rounded-2xl text-xs transition active:scale-95">
-            Resetar Todos os Dados
-          </button>
+        <!-- Dados Pessoais & Biometria -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-bold text-zinc-300">Biometria do Atleta</h3>
+            <button onclick="saveAthleteProfile()" class="text-xs font-bold text-brand hover:underline">Salvar Perfil</button>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="text-zinc-400 block mb-1 text-[11px]">Nome do Atleta</label>
+              <input type="text" id="profName" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1 text-[11px]">Sexo Biológico</label>
+              <select id="profGender" onchange="calculateBiometrics()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+                <option value="male">Masculino</option>
+                <option value="female">Feminino</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1 text-[11px]">Idade (anos)</label>
+              <input type="number" id="profAge" oninput="calculateBiometrics()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1 text-[11px]">Altura (cm)</label>
+              <input type="number" id="profHeight" oninput="calculateBiometrics()" placeholder="Ex: 178" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1 text-[11px]">Peso Atual (kg)</label>
+              <input type="number" step="0.1" id="profWeight" oninput="calculateBiometrics()" placeholder="Ex: 78.5" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1 text-[11px]">% Gordura Estimado (BF%)</label>
+              <input type="number" step="0.1" id="profBF" placeholder="Opcional (Ex: 14)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none focus:border-brand">
+            </div>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1 text-[11px]">Nível de Atividade Física Semanal</label>
+            <select id="profActivity" onchange="calculateBiometrics()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand">
+              <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+              <option value="1.375">Leve (treinos leves 1 a 3 dias/sem)</option>
+              <option value="1.55" selected>Moderado (treinos 3 a 5 dias/sem)</option>
+              <option value="1.725">Intenso (treinos pesados 6 a 7 dias/sem)</option>
+              <option value="1.9">Atleta de Elite / Treinos Híbridos 2x ao dia</option>
+            </select>
+          </div>
         </div>
+
+        <!-- Medidas Antropométricas Completas -->
+        <div class="bg-darkSurface border border-zinc-800 rounded-3xl p-4 shadow-lg space-y-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-xs font-bold text-zinc-300">Medidas Corporais (cm)</h3>
+              <p class="text-[10px] text-zinc-500">Mantenha a fita métrica ajustada e relaxada</p>
+            </div>
+            <button onclick="saveFullMeasurements()" class="px-3 py-1.5 bg-brand text-black font-bold text-xs rounded-xl active:scale-95 transition">Salvar Medidas</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 text-xs">
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Pescoço</span>
+              <input type="number" step="0.1" id="mNeck" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Tórax / Peito</span>
+              <input type="number" step="0.1" id="mChest" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Cintura</span>
+              <input type="number" step="0.1" id="mWaist" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Abdômen</span>
+              <input type="number" step="0.1" id="mAbdomen" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Quadril</span>
+              <input type="number" step="0.1" id="mHip" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Braço Direito</span>
+              <input type="number" step="0.1" id="mArmR" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Braço Esquerdo</span>
+              <input type="number" step="0.1" id="mArmL" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Coxa Direita</span>
+              <input type="number" step="0.1" id="mThighR" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Coxa Esquerda</span>
+              <input type="number" step="0.1" id="mThighL" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+            <div class="bg-zinc-800/40 p-2 rounded-xl border border-zinc-800">
+              <span class="text-[10px] text-zinc-400 block">Panturrilha (D/E)</span>
+              <input type="number" step="0.1" id="mCalf" placeholder="cm" class="w-full bg-transparent font-bold text-white outline-none">
+            </div>
+          </div>
+        </div>
+
       </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar (App Nativo Style) -->
-    <nav class="absolute bottom-0 left-0 right-0 h-20 bg-darkSurface/95 backdrop-blur-lg border-t border-zinc-800/80 px-4 flex items-center justify-around z-30">
+    <!-- Bottom Navigation Bar (5 Abas Mobile-First) -->
+    <nav class="absolute bottom-0 left-0 right-0 h-20 bg-darkSurface/95 backdrop-blur-lg border-t border-zinc-800/80 px-2 flex items-center justify-around z-30">
       <button onclick="switchTab('tab-today')" class="nav-item flex flex-col items-center gap-1 text-brand transition active:scale-90" data-target="tab-today">
         <i data-lucide="layout-grid" class="w-5 h-5"></i>
-        <span class="text-[10px] font-semibold">Hoje</span>
+        <span class="text-[9px] font-semibold">Hoje</span>
       </button>
 
-      <button onclick="switchTab('tab-workouts')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition active:scale-90" data-target="tab-workouts">
+      <button onclick="switchTab('tab-workouts')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 transition active:scale-90" data-target="tab-workouts">
         <i data-lucide="dumbbell" class="w-5 h-5"></i>
-        <span class="text-[10px] font-semibold">Treinos</span>
+        <span class="text-[9px] font-semibold">Treinos</span>
       </button>
 
-      <button onclick="switchTab('tab-diet')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition active:scale-90" data-target="tab-diet">
-        <i data-lucide="apple" class="w-5 h-5"></i>
-        <span class="text-[10px] font-semibold">Dieta</span>
+      <button onclick="switchTab('tab-diet')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 transition active:scale-90" data-target="tab-diet">
+        <i data-lucide="utensils" class="w-5 h-5"></i>
+        <span class="text-[9px] font-semibold">Dieta</span>
       </button>
 
-      <button onclick="switchTab('tab-evolution')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 hover:text-zinc-300 transition active:scale-90" data-target="tab-evolution">
+      <button onclick="switchTab('tab-evolution')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 transition active:scale-90" data-target="tab-evolution">
         <i data-lucide="line-chart" class="w-5 h-5"></i>
-        <span class="text-[10px] font-semibold">Evolução</span>
+        <span class="text-[9px] font-semibold">Evolução</span>
+      </button>
+
+      <button onclick="switchTab('tab-athlete')" class="nav-item flex flex-col items-center gap-1 text-zinc-500 transition active:scale-90" data-target="tab-athlete">
+        <i data-lucide="user-check" class="w-5 h-5"></i>
+        <span class="text-[9px] font-semibold">Atleta</span>
       </button>
     </nav>
 
-    <!-- ================= MODAIS DE REGISTRO ================= -->
+    <!-- ================= MODAIS & PLANILHAS ================= -->
 
-    <!-- Modal Novo Exercício -->
-    <div id="modalAddExercise" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
-      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 animate-in slide-in-from-bottom duration-200">
+    <!-- Modal Adicionar Atividade Multimodal -->
+    <div id="modalAddExercise" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-base">Adicionar Exercício</h3>
+          <h3 class="font-bold text-sm">Nova Atividade / Exercício</h3>
           <button onclick="closeModal('modalAddExercise')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-        <div class="space-y-3">
-          <input type="text" id="newExerciseName" placeholder="Nome do Exercício (ex: Supino Reto)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-          <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="newExerciseSeries" placeholder="Séries x Reps (ex: 4x10)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-            <input type="text" id="newExerciseLoad" placeholder="Carga (ex: 30kg)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+
+        <div class="space-y-2.5 text-xs">
+          <div>
+            <label class="text-zinc-400 block mb-1">Modalidade</label>
+            <select id="newExType" onchange="adaptModalFields()" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none">
+              <option value="gym">Musculação / Força</option>
+              <option value="running">Corrida / Caminhada</option>
+              <option value="cycling">Ciclismo (Outdoor)</option>
+              <option value="indoor_bike">Bike Indoor (Spinning/RPM)</option>
+              <option value="calisthenics">Calistenia & Isometria</option>
+              <option value="hybrid">Circuito Híbrido / WOD</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-zinc-400 block mb-1">Nome / Descrição da Atividade</label>
+            <input type="text" id="newExName" placeholder="Ex: Supino Inclinado, Tiro 1km, Rodagem Z2" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2" id="fieldsParamContainer">
+            <div>
+              <label class="text-zinc-400 block mb-1" id="labelParam1">Séries x Repetições</label>
+              <input type="text" id="newExParam1" placeholder="Ex: 4x10" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none">
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1" id="labelParam2">Carga / Intensidade</label>
+              <input type="text" id="newExParam2" placeholder="Ex: 26kg" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white outline-none">
+            </div>
           </div>
         </div>
+
         <button onclick="confirmAddExercise()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Adicionar ao Treino</button>
       </div>
     </div>
 
-    <!-- Modal Nova Refeição -->
-    <div id="modalAddMeal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
-      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
+    <!-- Modal Importar/Exportar Planilhas -->
+    <div id="modalSheet" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-base">Nova Refeição</h3>
+          <h3 class="font-bold text-sm flex items-center gap-2">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-brand"></i> Planilhas & Backups
+          </h3>
+          <button onclick="closeModal('modalSheet')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          <p class="text-zinc-400">Cole uma planilha de treino em formato texto ou importe/exporte seu backup em JSON:</p>
+          <textarea id="sheetPasteArea" rows="4" placeholder="Exemplo simples para colar:&#10;Supino Reto: 4x10 - 30kg&#10;Agachamento: 4x8 - 80kg&#10;Corrida Regenerativa: 5km - 30min" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-2.5 text-white outline-none font-mono text-[11px]"></textarea>
+          
+          <button onclick="importQuickTextSheet()" class="w-full py-2 bg-brand/20 border border-brand/40 text-brand font-bold rounded-xl active:scale-95 transition">
+            Converter Texto para Treino Atual
+          </button>
+        </div>
+
+        <div class="pt-2 border-t border-zinc-800 flex gap-2">
+          <button onclick="exportJSONBackup()" class="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-1">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Dados (JSON)
+          </button>
+          <label class="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer">
+            <i data-lucide="upload" class="w-3.5 h-3.5"></i> Importar JSON
+            <input type="file" id="fileImportInput" accept=".json" class="hidden" onchange="importJSONBackup(event)">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Registrar Peso -->
+    <div id="modalWeight" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-sm">Registrar Pesagem</h3>
+          <button onclick="closeModal('modalWeight')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <input type="number" step="0.1" id="newWeightInput" placeholder="Ex: 79.2" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
+        <button onclick="confirmWeight()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Peso</button>
+      </div>
+    </div>
+
+    <!-- Modal Nova Refeição -->
+    <div id="modalAddMeal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-sm">Nova Refeição</h3>
           <button onclick="closeModal('modalAddMeal')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-        <div class="space-y-3">
-          <input type="text" id="newMealName" placeholder="Título (ex: Almoço, Pós-Treino)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-          <input type="time" id="newMealTime" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-          <textarea id="newMealDesc" rows="3" placeholder="Alimentos (ex: 150g Frango, 200g Arroz, Salada)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none"></textarea>
-        </div>
+        <input type="text" id="newMealName" placeholder="Ex: Pós-Treino, Almoço" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+        <input type="time" id="newMealTime" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+        <textarea id="newMealDesc" rows="3" placeholder="Ex: 160g Frango, 200g Arroz, Legumes" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none"></textarea>
         <button onclick="confirmAddMeal()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Refeição</button>
       </div>
     </div>
 
     <!-- Modal Novo Suplemento -->
-    <div id="modalAddSupplement" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
-      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
+    <div id="modalAddSupplement" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-base">Novo Suplemento</h3>
+          <h3 class="font-bold text-sm">Adicionar Suplemento</h3>
           <button onclick="closeModal('modalAddSupplement')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-        <div class="space-y-3">
-          <input type="text" id="newSuppName" placeholder="Nome (ex: Creatina, Whey, Ômega 3)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-          <input type="text" id="newSuppDosage" placeholder="Dose / Horário (ex: 5g pela manhã)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-        </div>
-        <button onclick="confirmAddSupplement()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Adicionar Suplemento</button>
-      </div>
-    </div>
-
-    <!-- Modal Registrar Peso -->
-    <div id="modalWeight" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
-      <div class="bg-darkSurface border border-zinc-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-base">Registrar Peso Atual</h3>
-          <button onclick="closeModal('modalWeight')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-        </div>
-        <div class="space-y-3">
-          <input type="number" step="0.1" id="newWeightInput" placeholder="Ex: 78.5" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand outline-none">
-        </div>
-        <button onclick="confirmWeight()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar Peso</button>
+        <input type="text" id="newSuppName" placeholder="Ex: Creatina Creapure" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+        <input type="text" id="newSuppDosage" placeholder="Ex: 5g após o treino" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+        <button onclick="confirmAddSupplement()" class="w-full py-3 bg-brand text-black font-bold rounded-2xl text-xs active:scale-95 transition">Salvar</button>
       </div>
     </div>
 
   </div>
 
-  <!-- ================= LÓGICA DO APP (JAVASCRIPT) ================= -->
+  <!-- ================= LÓGICA JAVASCRIPT ================= -->
   <script>
-    // Estado inicial padrão (Default State)
+    // Estrutura de dados padrão com suporte robusto
     const DEFAULT_DATA = {
-      user: { name: 'Atleta', waterGoal: 3000 },
-      waterCurrent: 1250,
-      activeSplit: 'A',
-      workouts: {
-        A: {
-          title: "Treino A - Peito, Ombro e Tríceps",
-          exercises: [
-            { id: 1, name: "Supino Inclinado com Halteres", sets: "4x10", weight: "24kg" },
-            { id: 2, name: "Crucifixo na Polia", sets: "3x12", weight: "15kg" },
-            { id: 3, name: "Desenvolvimento Militar", sets: "4x8", weight: "18kg" },
-            { id: 4, name: "Tríceps Corda", sets: "4x12", weight: "22kg" }
+      athlete: {
+        name: "Atleta Pro",
+        gender: "male",
+        age: 26,
+        height: 178,
+        weight: 78.5,
+        bf: 13.5,
+        activityLevel: 1.55,
+        waterGoal: 3200
+      },
+      measurements: {
+        neck: 39,
+        chest: 104,
+        waist: 81,
+        abdomen: 84,
+        hip: 99,
+        armR: 38.5,
+        armL: 38.2,
+        thighR: 59.5,
+        thighL: 59.0,
+        calf: 38
+      },
+      waterCurrent: 1500,
+      activeSplitId: 'A',
+      workoutSplits: [
+        {
+          id: 'A',
+          title: 'Treino A - Peito, Ombro & Tríceps',
+          modality: 'gym',
+          activities: [
+            { id: 1, type: 'gym', name: 'Supino Inclinado com Halteres', param1: '4x10', param2: '26kg' },
+            { id: 2, type: 'gym', name: 'Desenvolvimento Militar', param1: '4x8', param2: '18kg' },
+            { id: 3, type: 'gym', name: 'Tríceps Polia Corda', param1: '3x12', param2: '22kg' }
           ]
         },
-        B: {
-          title: "Treino B - Costas e Bíceps",
-          exercises: [
-            { id: 5, name: "Puxada Frontal", sets: "4x10", weight: "55kg" },
-            { id: 6, name: "Remada Curvada", sets: "4x8", weight: "40kg" },
-            { id: 7, name: "Rosca Direta Barra W", sets: "3x10", weight: "14kg" }
+        {
+          id: 'B',
+          title: 'Treino B - Corrida Tempo & Intervlos',
+          modality: 'running',
+          activities: [
+            { id: 4, type: 'running', name: 'Aquecimento Trote Leve', param1: '1.5 km', param2: 'Pace 6:00' },
+            { id: 5, type: 'running', name: 'Tiros de 800m (x4)', param1: '3.2 km total', param2: 'Pace 4:15' },
+            { id: 6, type: 'running', name: 'Desaquecimento', param1: '1.0 km', param2: 'Pace 6:30' }
           ]
         },
-        C: {
-          title: "Treino C - Pernas Completo",
-          exercises: [
-            { id: 8, name: "Agachamento Livre", sets: "4x8", weight: "60kg" },
-            { id: 9, name: "Leg Press 45°", sets: "4x12", weight: "160kg" },
-            { id: 10, name: "Mesa Flexora", sets: "3x12", weight: "40kg" }
+        {
+          id: 'C',
+          title: 'Treino C - Bike Indoor / Giro Z2',
+          modality: 'indoor_bike',
+          activities: [
+            { id: 7, type: 'indoor_bike', name: 'Aquecimento Cadência Constante', param1: '10 min', param2: '85 RPM / Carga 4' },
+            { id: 8, type: 'indoor_bike', name: 'Bloco Contínuo Zona 2', param1: '35 min', param2: '90 RPM / Carga 6' },
+            { id: 9, type: 'indoor_bike', name: 'Sprints Finais (30s on / 30s off)', param1: '5 rounds', param2: '110+ RPM' }
+          ]
+        },
+        {
+          id: 'D',
+          title: 'Treino D - Calistenia & Core',
+          modality: 'calisthenics',
+          activities: [
+            { id: 10, type: 'calisthenics', name: 'Barra Fixa (Pull-ups)', param1: '4x8 reps', param2: 'Peso corporal' },
+            { id: 11, type: 'calisthenics', name: 'Paralelas (Dips)', param1: '4x12 reps', param2: 'Peso corporal' },
+            { id: 12, type: 'calisthenics', name: 'Prancha Isométrica', param1: '3x60s', param2: 'Isometria' }
           ]
         }
-      },
+      ],
       meals: [
-        { id: 1, name: "Café da Manhã", time: "07:30", desc: "3 ovos mexidos, 2 fatias de pão integral, café preto", checked: true },
-        { id: 2, name: "Almoço", time: "12:30", desc: "150g peito de frango, 150g arroz, salada verde", checked: false },
-        { id: 3, name: "Lanche da Tarde", time: "16:30", desc: "1 dose de whey protein, 1 banana, 30g aveia", checked: false },
-        { id: 4, name: "Jantar", time: "20:00", desc: "150g patinho moído, 150g batata inglesa", checked: false }
+        { id: 1, name: "Café da Manhã", time: "07:30", desc: "4 ovos, 2 fatias de pão sourdough, café sem açúcar", checked: true },
+        { id: 2, name: "Almoço", time: "12:30", desc: "180g peito de frango, 200g arroz branco, azeite e vegetais", checked: true },
+        { id: 3, name: "Pré/Pós Treino Híbrido", time: "16:30", desc: "1 scoop Whey Isolado, 1 banana, 40g aveia", checked: false },
+        { id: 4, name: "Jantar", time: "20:00", desc: "180g patinho, 250g batata inglesa assada", checked: false }
       ],
       supplements: [
-        { id: 1, name: "Creatina", dosage: "5g após o almoço", checked: true },
-        { id: 2, name: "Whey Protein", dosage: "30g no lanche da tarde", checked: false },
-        { id: 3, name: "Multivitamínico", dosage: "1 cápsula ao acordar", checked: true }
+        { id: 1, name: "Creatina Monoidratada", dosage: "5g diárias pós-almoço", checked: true },
+        { id: 2, name: "Beta-Alanina", dosage: "3g antes da corrida/treino", checked: false },
+        { id: 3, name: "Eletrólitos / Sais", dosage: "1 sachê nos treinos longos de corrida/bike", checked: true }
       ],
       weightLogs: [
-        { date: "10/Out", weight: 81.2 },
-        { date: "17/Out", weight: 80.8 },
-        { date: "24/Out", weight: 80.1 },
-        { date: "01/Nov", weight: 79.5 }
-      ],
-      measurements: { arm: 38, waist: 83, chest: 101, thigh: 59 }
+        { date: "10/Out", weight: 80.2 },
+        { date: "18/Out", weight: 79.6 },
+        { date: "26/Out", weight: 79.1 },
+        { date: "03/Nov", weight: 78.5 }
+      ]
     };
 
-    // Carregar estado do localStorage
-    let appData = JSON.parse(localStorage.getItem('pulsefit_data')) || DEFAULT_DATA;
-
-    function saveData() {
-      localStorage.setItem('pulsefit_data', JSON.stringify(appData));
-      renderAll();
-    }
-
-    // Variável do Chart.js
+    let appData = JSON.parse(localStorage.getItem('pulsefit_pro_data')) || DEFAULT_DATA;
     let weightChartInstance = null;
 
-    // Inicialização
+    function saveData() {
+      localStorage.setItem('pulsefit_pro_data', JSON.stringify(appData));
+      renderAll();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      initDate();
+      document.getElementById('currentDate').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
       renderAll();
       initChart();
+      calculateBiometrics();
     });
-
-    function initDate() {
-      const options = { weekday: 'short', day: 'numeric', month: 'short' };
-      const dateStr = new Date().toLocaleDateString('pt-BR', options);
-      document.getElementById('currentDate').innerText = dateStr.toUpperCase();
-    }
 
     // Navegação de Abas
     function switchTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.getElementById(tabId).classList.remove('hidden');
 
-      // Atualizar barra de navegação
       document.querySelectorAll('.nav-item').forEach(btn => {
         if (btn.getAttribute('data-target') === tabId) {
           btn.classList.add('text-brand');
@@ -479,197 +638,443 @@
         }
       });
 
-      if (tabId === 'tab-evolution') {
-        setTimeout(initChart, 50);
-      }
+      if (tabId === 'tab-evolution') setTimeout(initChart, 60);
+      if (tabId === 'tab-athlete') calculateBiometrics();
     }
 
-    // ====== RENDERIZADORES ======
+    // ====== CÁLCULO BIOMÉTRICO (IMC, TMB, GET) ======
+    function calculateBiometrics() {
+      const weight = parseFloat(document.getElementById('profWeight').value) || appData.athlete.weight;
+      const height = parseFloat(document.getElementById('profHeight').value) || appData.athlete.height;
+      const age = parseInt(document.getElementById('profAge').value) || appData.athlete.age;
+      const gender = document.getElementById('profGender').value || appData.athlete.gender;
+      const activity = parseFloat(document.getElementById('profActivity').value) || appData.athlete.activityLevel;
+
+      if (!weight || !height) return;
+
+      // 1. IMC
+      const heightM = height / 100;
+      const imc = (weight / (heightM * heightM)).toFixed(1);
+      document.getElementById('calcIMC').innerText = imc;
+
+      let imcClass = "Normal";
+      if (imc < 18.5) imcClass = "Abaixo";
+      else if (imc >= 25 && imc < 29.9) imcClass = "Sobrepeso";
+      else if (imc >= 30) imcClass = "Obesidade";
+      document.getElementById('calcIMCClass').innerText = imcClass;
+
+      // 2. Taxa Metabólica Basal (Mifflin-St Jeor)
+      let tmb = (10 * weight) + (6.25 * height) - (5 * age);
+      tmb = gender === 'male' ? Math.round(tmb + 5) : Math.round(tmb - 161);
+      document.getElementById('calcTMB').innerText = tmb;
+
+      // 3. Gasto Energético Total (GET)
+      const get = Math.round(tmb * activity);
+      document.getElementById('calcGET').innerText = get;
+    }
+
+    function saveAthleteProfile() {
+      appData.athlete.name = document.getElementById('profName').value || "Atleta";
+      appData.athlete.gender = document.getElementById('profGender').value;
+      appData.athlete.age = parseInt(document.getElementById('profAge').value) || 25;
+      appData.athlete.height = parseFloat(document.getElementById('profHeight').value) || 175;
+      appData.athlete.weight = parseFloat(document.getElementById('profWeight').value) || 75;
+      appData.athlete.bf = parseFloat(document.getElementById('profBF').value) || 0;
+      appData.athlete.activityLevel = parseFloat(document.getElementById('profActivity').value) || 1.55;
+
+      saveData();
+      alert('Perfil do atleta salvo com sucesso!');
+    }
+
+    function saveFullMeasurements() {
+      appData.measurements = {
+        neck: parseFloat(document.getElementById('mNeck').value) || 0,
+        chest: parseFloat(document.getElementById('mChest').value) || 0,
+        waist: parseFloat(document.getElementById('mWaist').value) || 0,
+        abdomen: parseFloat(document.getElementById('mAbdomen').value) || 0,
+        hip: parseFloat(document.getElementById('mHip').value) || 0,
+        armR: parseFloat(document.getElementById('mArmR').value) || 0,
+        armL: parseFloat(document.getElementById('mArmL').value) || 0,
+        thighR: parseFloat(document.getElementById('mThighR').value) || 0,
+        thighL: parseFloat(document.getElementById('mThighL').value) || 0,
+        calf: parseFloat(document.getElementById('mCalf').value) || 0
+      };
+      saveData();
+      alert('Medidas antropométricas atualizadas!');
+    }
+
+    // ====== RENDERIZAÇÃO GERAL ======
     function renderAll() {
-      document.getElementById('userNameHeader').innerText = appData.user.name;
-      
-      // 1. Água
-      const waterGoal = appData.user.waterGoal;
-      const currentWater = appData.waterCurrent;
-      document.getElementById('waterCurrentText').innerText = currentWater;
-      document.getElementById('waterGoalText').innerText = waterGoal;
-      const pct = Math.min(100, Math.round((currentWater / waterGoal) * 100));
+      // Perfil
+      document.getElementById('userNameHeader').innerText = appData.athlete.name;
+      document.getElementById('profName').value = appData.athlete.name;
+      document.getElementById('profGender').value = appData.athlete.gender;
+      document.getElementById('profAge').value = appData.athlete.age;
+      document.getElementById('profHeight').value = appData.athlete.height;
+      document.getElementById('profWeight').value = appData.athlete.weight;
+      document.getElementById('profBF').value = appData.athlete.bf || '';
+      document.getElementById('profActivity').value = appData.athlete.activityLevel;
+
+      // Medidas
+      document.getElementById('mNeck').value = appData.measurements.neck || '';
+      document.getElementById('mChest').value = appData.measurements.chest || '';
+      document.getElementById('mWaist').value = appData.measurements.waist || '';
+      document.getElementById('mAbdomen').value = appData.measurements.abdomen || '';
+      document.getElementById('mHip').value = appData.measurements.hip || '';
+      document.getElementById('mArmR').value = appData.measurements.armR || '';
+      document.getElementById('mArmL').value = appData.measurements.armL || '';
+      document.getElementById('mThighR').value = appData.measurements.thighR || '';
+      document.getElementById('mThighL').value = appData.measurements.thighL || '';
+      document.getElementById('mCalf').value = appData.measurements.calf || '';
+
+      // Hidratação
+      const goal = appData.athlete.waterGoal || 3000;
+      document.getElementById('waterCurrentText').innerText = appData.waterCurrent;
+      document.getElementById('waterGoalText').innerText = goal;
+      const pct = Math.min(100, Math.round((appData.waterCurrent / goal) * 100));
       document.getElementById('waterPercent').innerText = `${pct}%`;
       document.getElementById('waterProgressBar').style.width = `${pct}%`;
 
-      // 2. Treino de Hoje (Preview no Dashboard)
-      const currentSplit = appData.workouts[appData.activeSplit] || appData.workouts['A'];
-      document.getElementById('currentWorkoutTitle').innerText = currentSplit.title;
-      const quickList = document.getElementById('quickWorkoutList');
-      quickList.innerHTML = currentSplit.exercises.slice(0, 3).map(ex => `
-        <div class="flex justify-between items-center bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-800 text-xs">
-          <span class="font-medium">${ex.name}</span>
-          <span class="text-zinc-400 font-semibold">${ex.sets} • ${ex.weight}</span>
-        </div>
-      `).join('');
-
-      // 3. Suplementos do Dia
-      const suppContainer = document.getElementById('todaySupplementsList');
-      const suppCheckedCount = appData.supplements.filter(s => s.checked).length;
-      document.getElementById('supplementsCounter').innerText = `${suppCheckedCount}/${appData.supplements.length}`;
-      
-      suppContainer.innerHTML = appData.supplements.map(s => `
-        <div onclick="toggleSupplement(${s.id})" class="flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer ${s.checked ? 'bg-brand/10 border-brand/30 text-white' : 'bg-zinc-800/40 border-zinc-800 text-zinc-300'}">
-          <div>
-            <p class="text-xs font-bold ${s.checked ? 'line-through text-zinc-400' : ''}">${s.name}</p>
-            <p class="text-[11px] text-zinc-500">${s.dosage}</p>
-          </div>
-          <div class="w-6 h-6 rounded-full flex items-center justify-center border ${s.checked ? 'bg-brand border-brand text-black' : 'border-zinc-600'}">
-            ${s.checked ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
-          </div>
-        </div>
-      `).join('');
-
-      // 4. Refeições no Dashboard
-      const mealsTodayContainer = document.getElementById('todayMealsChecklist');
-      mealsTodayContainer.innerHTML = appData.meals.map(m => `
-        <div onclick="toggleMeal(${m.id})" class="flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer ${m.checked ? 'bg-brand/10 border-brand/30' : 'bg-zinc-800/40 border-zinc-800'}">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold ${m.checked ? 'line-through text-zinc-400' : 'text-zinc-200'}">${m.name}</span>
-              <span class="text-[10px] text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">${m.time}</span>
+      // Treino de Hoje (Preview)
+      const currentSplit = appData.workoutSplits.find(s => s.id === appData.activeSplitId) || appData.workoutSplits[0];
+      if (currentSplit) {
+        document.getElementById('currentWorkoutTitle').innerText = currentSplit.title;
+        document.getElementById('quickWorkoutList').innerHTML = currentSplit.activities.slice(0, 3).map(a => `
+          <div class="flex justify-between items-center bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-800 text-xs">
+            <div>
+              <span class="font-medium text-white">${a.name}</span>
             </div>
-            <p class="text-[11px] text-zinc-400 truncate max-w-[240px] mt-0.5">${m.desc}</p>
+            <span class="text-zinc-400 font-semibold">${a.param1} • ${a.param2}</span>
           </div>
-          <div class="w-6 h-6 rounded-full flex items-center justify-center border ${m.checked ? 'bg-brand border-brand text-black' : 'border-zinc-600'}">
-            ${m.checked ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
-          </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
 
-      // 5. Lista de Treinos Aba Treinos
-      renderWorkoutTab();
+      // Suplementos & Refeições no Dashboard
+      renderDashboardChecklists();
 
-      // 6. Lista de Refeições e Suplementos Aba Dieta
+      // Treinos e Divisões
+      renderWorkoutsTab();
+
+      // Refeições Tab Dieta
       renderDietTab();
 
-      // 7. Dados de Evolução
-      renderEvolutionTab();
-
-      // 8. Ajustes
-      document.getElementById('settingName').value = appData.user.name;
-      document.getElementById('settingWater').value = appData.user.waterGoal;
-
-      lucide.createIcons();
-    }
-
-    // ====== ABA TREINOS ======
-    function selectSplit(splitKey) {
-      appData.activeSplit = splitKey;
-      document.querySelectorAll('.split-tab').forEach(btn => {
-        if (btn.getAttribute('data-split') === splitKey) {
-          btn.classList.add('bg-brand', 'text-black');
-          btn.classList.remove('bg-darkSurface', 'text-zinc-400', 'border');
-        } else {
-          btn.classList.remove('bg-brand', 'text-black');
-          btn.classList.add('bg-darkSurface', 'text-zinc-400', 'border');
-        }
-      });
-      renderWorkoutTab();
-    }
-
-    function renderWorkoutTab() {
-      const current = appData.workouts[appData.activeSplit] || { exercises: [] };
-      const container = document.getElementById('exercisesContainer');
-      
-      if (!current.exercises.length) {
-        container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-8">Nenhum exercício cadastrado neste treino.</p>`;
-        return;
-      }
-
-      container.innerHTML = current.exercises.map(ex => `
-        <div class="bg-darkSurface border border-zinc-800/80 rounded-2xl p-4 flex items-center justify-between shadow">
-          <div>
-            <h4 class="text-sm font-semibold text-white">${ex.name}</h4>
-            <div class="flex items-center gap-3 text-xs text-zinc-400 mt-1">
-              <span><strong class="text-brand">${ex.sets}</strong> séries</span>
-              <span>•</span>
-              <span><strong class="text-zinc-300">${ex.weight}</strong> carga</span>
-            </div>
-          </div>
-          <button onclick="deleteExercise(${ex.id})" class="text-zinc-600 hover:text-rose-400 p-2 transition">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    // ====== ABA DIETA & SUPLEMENTOS ======
-    function renderDietTab() {
-      const container = document.getElementById('mealsContainer');
-      container.innerHTML = appData.meals.map(m => `
-        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-4 flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-xs font-bold text-brand uppercase tracking-wider">${m.time}</span>
-              <span class="text-sm font-bold text-white">${m.name}</span>
-            </div>
-            <p class="text-xs text-zinc-400 mt-1">${m.desc}</p>
-          </div>
-          <button onclick="deleteMeal(${m.id})" class="text-zinc-600 hover:text-rose-400 p-1">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
-      `).join('');
-
-      const suppList = document.getElementById('supplementsManagementList');
-      suppList.innerHTML = appData.supplements.map(s => `
-        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-3 flex justify-between items-center text-xs">
-          <div>
-            <strong class="text-zinc-200">${s.name}</strong>
-            <p class="text-zinc-500">${s.dosage}</p>
-          </div>
-          <button onclick="deleteSupplement(${s.id})" class="text-zinc-600 hover:text-rose-400 p-1">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
-      `).join('');
-    }
-
-    // ====== ABA EVOLUÇÃO ======
-    function renderEvolutionTab() {
+      // Evolução
       if (appData.weightLogs.length > 0) {
-        const lastWeight = appData.weightLogs[appData.weightLogs.length - 1].weight;
-        document.getElementById('currentWeightBadge').innerText = `${lastWeight} kg`;
+        const lastW = appData.weightLogs[appData.weightLogs.length - 1].weight;
+        document.getElementById('evolutionCurrentWeight').innerText = `${lastW} kg`;
       }
-
-      document.getElementById('measureArm').value = appData.measurements.arm || '';
-      document.getElementById('measureWaist').value = appData.measurements.waist || '';
-      document.getElementById('measureChest').value = appData.measurements.chest || '';
-      document.getElementById('measureThigh').value = appData.measurements.thigh || '';
-
-      const histList = document.getElementById('weightHistoryList');
-      histList.innerHTML = [...appData.weightLogs].reverse().map(l => `
-        <div class="flex justify-between py-2 text-zinc-400">
+      document.getElementById('weightHistoryList').innerHTML = [...appData.weightLogs].reverse().map(l => `
+        <div class="flex justify-between py-1.5 text-zinc-400">
           <span>${l.date}</span>
           <span class="font-bold text-white">${l.weight} kg</span>
         </div>
       `).join('');
+
+      lucide.createIcons();
     }
 
+    function renderDashboardChecklists() {
+      // Suplementos
+      const suppCount = appData.supplements.filter(s => s.checked).length;
+      document.getElementById('supplementsCounter').innerText = `${suppCount}/${appData.supplements.length}`;
+      document.getElementById('todaySupplementsList').innerHTML = appData.supplements.map(s => `
+        <div onclick="toggleSupplement(${s.id})" class="flex items-center justify-between p-2.5 rounded-2xl border transition cursor-pointer ${s.checked ? 'bg-brand/10 border-brand/30 text-white' : 'bg-zinc-800/40 border-zinc-800 text-zinc-300'}">
+          <div>
+            <p class="text-xs font-bold ${s.checked ? 'line-through text-zinc-400' : ''}">${s.name}</p>
+            <p class="text-[10px] text-zinc-500">${s.dosage}</p>
+          </div>
+          <div class="w-5 h-5 rounded-full flex items-center justify-center border ${s.checked ? 'bg-brand border-brand text-black' : 'border-zinc-600'}">
+            ${s.checked ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+          </div>
+        </div>
+      `).join('');
+
+      // Refeições
+      document.getElementById('todayMealsChecklist').innerHTML = appData.meals.map(m => `
+        <div onclick="toggleMeal(${m.id})" class="flex items-center justify-between p-2.5 rounded-2xl border transition cursor-pointer ${m.checked ? 'bg-brand/10 border-brand/30' : 'bg-zinc-800/40 border-zinc-800'}">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold ${m.checked ? 'line-through text-zinc-400' : 'text-zinc-200'}">${m.name}</span>
+              <span class="text-[10px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded-full">${m.time}</span>
+            </div>
+            <p class="text-[10px] text-zinc-400 truncate max-w-[240px]">${m.desc}</p>
+          </div>
+          <div class="w-5 h-5 rounded-full flex items-center justify-center border ${m.checked ? 'bg-brand border-brand text-black' : 'border-zinc-600'}">
+            ${m.checked ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ====== ABA TREINOS & MULTIMODALIDADES ======
+    function renderWorkoutsTab() {
+      const splitSelector = document.getElementById('splitSelector');
+      splitSelector.innerHTML = appData.workoutSplits.map(s => `
+        <button onclick="selectSplit('${s.id}')" class="px-3.5 py-1.5 rounded-2xl text-xs font-bold whitespace-nowrap transition ${s.id === appData.activeSplitId ? 'bg-brand text-black shadow' : 'bg-darkSurface text-zinc-400 border border-zinc-800'}">
+          ${s.title.split('-')[0]}
+        </button>
+      `).join('');
+
+      const current = appData.workoutSplits.find(s => s.id === appData.activeSplitId) || appData.workoutSplits[0];
+      if (!current) return;
+
+      document.getElementById('currentSplitTypeBadge').innerText = current.modality;
+      
+      const container = document.getElementById('exercisesContainer');
+      if (!current.activities.length) {
+        container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-6">Nenhuma atividade nesta pasta. Adicione acima ou cole uma planilha!</p>`;
+        return;
+      }
+
+      container.innerHTML = current.activities.map(a => `
+        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-3 flex items-center justify-between shadow">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-bold">${a.type}</span>
+              <h4 class="text-xs font-bold text-white">${a.name}</h4>
+            </div>
+            <div class="text-[11px] text-zinc-400 mt-1 flex gap-2">
+              <span class="text-brand font-semibold">${a.param1}</span>
+              <span>•</span>
+              <span class="text-zinc-300 font-semibold">${a.param2}</span>
+            </div>
+          </div>
+          <button onclick="deleteActivity(${a.id})" class="text-zinc-600 hover:text-rose-400 p-1.5">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function selectSplit(id) {
+      appData.activeSplitId = id;
+      renderWorkoutsTab();
+      saveData();
+    }
+
+    function addNewCustomRoutine() {
+      const title = prompt("Digite o nome da nova pasta / divisão (Ex: 'Treino E - Corrida Longão'):");
+      if (!title) return;
+      const newId = String.fromCharCode(65 + appData.workoutSplits.length);
+      appData.workoutSplits.push({
+        id: newId,
+        title: title,
+        modality: 'hybrid',
+        activities: []
+      });
+      appData.activeSplitId = newId;
+      saveData();
+    }
+
+    function deleteActivity(id) {
+      const split = appData.workoutSplits.find(s => s.id === appData.activeSplitId);
+      if (split) {
+        split.activities = split.activities.filter(a => a.id !== id);
+        saveData();
+      }
+    }
+
+    // Modal Campos Dinâmicos por Modalidade
+    function adaptModalFields() {
+      const type = document.getElementById('newExType').value;
+      const l1 = document.getElementById('labelParam1');
+      const l2 = document.getElementById('labelParam2');
+      const p1 = document.getElementById('newExParam1');
+      const p2 = document.getElementById('newExParam2');
+
+      if (type === 'running') {
+        l1.innerText = "Distância (km)"; p1.placeholder = "Ex: 6.5 km";
+        l2.innerText = "Pace / Tempo"; p2.placeholder = "Ex: 5:15 min/km ou 35 min";
+      } else if (type === 'indoor_bike') {
+        l1.innerText = "Duração / Séries"; p1.placeholder = "Ex: 45 min";
+        l2.innerText = "Cadência (RPM) / Carga"; p2.placeholder = "Ex: 90 RPM / Carga 5";
+      } else if (type === 'cycling') {
+        l1.innerText = "Distância / Tempo"; p1.placeholder = "Ex: 30 km";
+        l2.innerText = "Velocidade Média / Watts"; p2.placeholder = "Ex: 27 km/h";
+      } else if (type === 'calisthenics') {
+        l1.innerText = "Séries x Repetições"; p1.placeholder = "Ex: 4x12 reps";
+        l2.innerText = "Isometria / Sobrecarga"; p2.placeholder = "Ex: Peso do corpo ou +5kg";
+      } else {
+        l1.innerText = "Séries x Repetições"; p1.placeholder = "Ex: 4x10";
+        l2.innerText = "Carga"; p2.placeholder = "Ex: 30kg";
+      }
+    }
+
+    function confirmAddExercise() {
+      const type = document.getElementById('newExType').value;
+      const name = document.getElementById('newExName').value.trim();
+      const p1 = document.getElementById('newExParam1').value.trim();
+      const p2 = document.getElementById('newExParam2').value.trim();
+
+      if (!name) return alert('Dê um nome para o exercício ou atividade.');
+
+      const split = appData.workoutSplits.find(s => s.id === appData.activeSplitId);
+      if (split) {
+        split.activities.push({
+          id: Date.now(),
+          type,
+          name,
+          param1: p1 || '--',
+          param2: p2 || '--'
+        });
+      }
+
+      document.getElementById('newExName').value = '';
+      document.getElementById('newExParam1').value = '';
+      document.getElementById('newExParam2').value = '';
+      closeModal('modalAddExercise');
+      saveData();
+    }
+
+    // ====== PRESETS DE PLANILHAS PRONTAS ======
+    function applyPresetRoutine(presetKey) {
+      if (!confirm("Deseja adicionar este modelo pronto à sua lista de treinos?")) return;
+
+      if (presetKey === 'hybrid') {
+        appData.workoutSplits.push({
+          id: 'H1',
+          title: 'Híbrido: Força & Corrida 5K',
+          modality: 'hybrid',
+          activities: [
+            { id: Date.now()+1, type: 'gym', name: 'Agachamento Livre com Barra', param1: '4x6 reps', param2: 'Força Máxima' },
+            { id: Date.now()+2, type: 'gym', name: 'Supino Reto + Remada Pendlay', param1: '4x8 reps', param2: 'Supersérie' },
+            { id: Date.now()+3, type: 'running', name: 'Tiros Intervalados 400m (x6)', param1: '2.4 km', param2: 'Pace 4:10' }
+          ]
+        });
+      } else if (presetKey === 'calisthenics') {
+        appData.workoutSplits.push({
+          id: 'CAL',
+          title: 'Calistenia Completa & Core',
+          modality: 'calisthenics',
+          activities: [
+            { id: Date.now()+1, type: 'calisthenics', name: 'Muscle-up ou Barra Pronada', param1: '4x6 reps', param2: 'Sem impulso' },
+            { id: Date.now()+2, type: 'calisthenics', name: 'Paralelas com Pausa', param1: '4x10 reps', param2: 'Pausa 2s em baixo' },
+            { id: Date.now()+3, type: 'calisthenics', name: 'L-Sit na Paralela', param1: '4x20s', param2: 'Isometria' }
+          ]
+        });
+      } else if (presetKey === 'cycling') {
+        appData.workoutSplits.push({
+          id: 'CYC',
+          title: 'Endurance: Bike Indoor & Giro',
+          modality: 'indoor_bike',
+          activities: [
+            { id: Date.now()+1, type: 'indoor_bike', name: 'Aquecimento Progressivo', param1: '10 min', param2: '70-90 RPM' },
+            { id: Date.now()+2, type: 'indoor_bike', name: 'Bloco Sweet Spot / Limiar', param1: '3x8 min', param2: 'Carga Alta / 85 RPM' },
+            { id: Date.now()+3, type: 'indoor_bike', name: 'Giro Regenerativo', param1: '10 min', param2: 'Giro leve' }
+          ]
+        });
+      } else if (presetKey === 'running') {
+        appData.workoutSplits.push({
+          id: 'RUN',
+          title: 'Corrida: Longão de Sábado',
+          modality: 'running',
+          activities: [
+            { id: Date.now()+1, type: 'running', name: 'Mobilidade Tornozelo & Glúteos', param1: '5 min', param2: 'Aquecimento' },
+            { id: Date.now()+2, type: 'running', name: 'Rodagem Longa Contínua (Z2)', param1: '12 km', param2: 'Pace 5:40' }
+          ]
+        });
+      }
+
+      appData.activeSplitId = appData.workoutSplits[appData.workoutSplits.length - 1].id;
+      saveData();
+      alert('Planilha pronta adicionada com sucesso!');
+    }
+
+    // ====== PLANILHAS & BACKUPS ======
+    function openSheetModal() { openModal('modalSheet'); }
+
+    function importQuickTextSheet() {
+      const text = document.getElementById('sheetPasteArea').value.trim();
+      if (!text) return alert('Cole o texto da planilha.');
+
+      const lines = text.split('\n');
+      const current = appData.workoutSplits.find(s => s.id === appData.activeSplitId);
+      if (!current) return;
+
+      let count = 0;
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        // Tenta separar no formato: "Nome: Séries - Carga" ou só "Nome"
+        let name = line;
+        let p1 = "3x10";
+        let p2 = "Carga padrão";
+
+        if (line.includes(':')) {
+          const parts = line.split(':');
+          name = parts[0].trim();
+          const rest = parts[1].trim();
+          if (rest.includes('-')) {
+            const sub = rest.split('-');
+            p1 = sub[0].trim();
+            p2 = sub[1].trim();
+          } else {
+            p1 = rest;
+          }
+        }
+
+        current.activities.push({
+          id: Date.now() + Math.random(),
+          type: current.modality || 'gym',
+          name,
+          param1: p1,
+          param2: p2
+        });
+        count++;
+      });
+
+      document.getElementById('sheetPasteArea').value = '';
+      closeModal('modalSheet');
+      saveData();
+      alert(`${count} exercícios/atividades foram importados para o treino atual!`);
+    }
+
+    function exportJSONBackup() {
+      const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", jsonStr);
+      dlAnchor.setAttribute("download", `pulsefit_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+    }
+
+    function importJSONBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.athlete && imported.workoutSplits) {
+            appData = imported;
+            saveData();
+            initChart();
+            closeModal('modalSheet');
+            alert('Backup e planilhas restaurados com sucesso!');
+          } else {
+            alert('Arquivo JSON inválido para o PulseFit.');
+          }
+        } catch (err) {
+          alert('Erro ao ler arquivo JSON.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ====== EVOLUÇÃO (CHART.JS) ======
     function initChart() {
       const ctx = document.getElementById('weightChart');
       if (!ctx) return;
 
-      const labels = appData.weightLogs.map(l => l.date);
-      const data = appData.weightLogs.map(l => l.weight);
-
-      if (weightChartInstance) {
-        weightChartInstance.destroy();
-      }
+      if (weightChartInstance) weightChartInstance.destroy();
 
       weightChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels: appData.weightLogs.map(l => l.date),
           datasets: [{
-            data: data,
+            data: appData.weightLogs.map(l => l.weight),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             fill: true,
@@ -691,139 +1096,86 @@
       });
     }
 
-    // ====== AÇÕES ======
-    function addWater(amount) {
-      appData.waterCurrent += amount;
-      saveData();
-    }
-
-    function resetWater() {
-      appData.waterCurrent = 0;
-      saveData();
-    }
-
-    function toggleSupplement(id) {
-      const item = appData.supplements.find(s => s.id === id);
-      if (item) item.checked = !item.checked;
-      saveData();
-    }
-
-    function toggleMeal(id) {
-      const item = appData.meals.find(m => m.id === id);
-      if (item) item.checked = !item.checked;
-      saveData();
-    }
-
-    // Modal Handlers
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-    function openAddExerciseModal() { openModal('modalAddExercise'); }
-    function confirmAddExercise() {
-      const name = document.getElementById('newExerciseName').value.trim();
-      const sets = document.getElementById('newExerciseSeries').value.trim();
-      const weight = document.getElementById('newExerciseLoad').value.trim();
-
-      if (!name) return alert('Informe o nome do exercício');
-
-      appData.workouts[appData.activeSplit].exercises.push({
-        id: Date.now(),
-        name,
-        sets: sets || '3x10',
-        weight: weight || '--'
-      });
-
-      document.getElementById('newExerciseName').value = '';
-      document.getElementById('newExerciseSeries').value = '';
-      document.getElementById('newExerciseLoad').value = '';
-      closeModal('modalAddExercise');
-      saveData();
-    }
-
-    function deleteExercise(id) {
-      appData.workouts[appData.activeSplit].exercises = appData.workouts[appData.activeSplit].exercises.filter(e => e.id !== id);
-      saveData();
-    }
-
-    function openAddMealModal() { openModal('modalAddMeal'); }
-    function confirmAddMeal() {
-      const name = document.getElementById('newMealName').value.trim();
-      const time = document.getElementById('newMealTime').value || '12:00';
-      const desc = document.getElementById('newMealDesc').value.trim();
-
-      if (!name) return alert('Informe o nome da refeição');
-
-      appData.meals.push({ id: Date.now(), name, time, desc, checked: false });
-      document.getElementById('newMealName').value = '';
-      document.getElementById('newMealDesc').value = '';
-      closeModal('modalAddMeal');
-      saveData();
-    }
-
-    function deleteMeal(id) {
-      appData.meals = appData.meals.filter(m => m.id !== id);
-      saveData();
-    }
-
-    function openAddSupplementModal() { openModal('modalAddSupplement'); }
-    function confirmAddSupplement() {
-      const name = document.getElementById('newSuppName').value.trim();
-      const dosage = document.getElementById('newSuppDosage').value.trim();
-
-      if (!name) return alert('Informe o suplemento');
-
-      appData.supplements.push({ id: Date.now(), name, dosage: dosage || 'Dose padrão', checked: false });
-      document.getElementById('newSuppName').value = '';
-      document.getElementById('newSuppDosage').value = '';
-      closeModal('modalAddSupplement');
-      saveData();
-    }
-
-    function deleteSupplement(id) {
-      appData.supplements = appData.supplements.filter(s => s.id !== id);
-      saveData();
-    }
-
     function openWeightModal() { openModal('modalWeight'); }
     function confirmWeight() {
-      const weight = parseFloat(document.getElementById('newWeightInput').value);
-      if (!weight) return alert('Digite um valor de peso válido.');
-
+      const w = parseFloat(document.getElementById('newWeightInput').value);
+      if (!w) return alert('Digite um valor de peso.');
       const dateStr = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
-      appData.weightLogs.push({ date: dateStr, weight });
+      appData.weightLogs.push({ date: dateStr, weight: w });
+      appData.athlete.weight = w;
       document.getElementById('newWeightInput').value = '';
       closeModal('modalWeight');
       saveData();
       initChart();
     }
 
-    function saveMeasurements() {
-      appData.measurements = {
-        arm: document.getElementById('measureArm').value,
-        waist: document.getElementById('measureWaist').value,
-        chest: document.getElementById('measureChest').value,
-        thigh: document.getElementById('measureThigh').value,
-      };
+    // ====== DIETA, SUPLEMENTOS & ÁGUA ======
+    function addWater(qtd) { appData.waterCurrent += qtd; saveData(); }
+    function resetWater() { appData.waterCurrent = 0; saveData(); }
+    function toggleSupplement(id) {
+      const s = appData.supplements.find(x => x.id === id);
+      if (s) s.checked = !s.checked;
       saveData();
-      alert('Medidas salvas com sucesso!');
     }
-
-    function saveSettings() {
-      appData.user.name = document.getElementById('settingName').value || 'Atleta';
-      appData.user.waterGoal = parseInt(document.getElementById('settingWater').value) || 3000;
+    function toggleMeal(id) {
+      const m = appData.meals.find(x => x.id === id);
+      if (m) m.checked = !m.checked;
       saveData();
-      alert('Ajustes salvos!');
-      switchTab('tab-today');
     }
+    function renderDietTab() {
+      document.getElementById('mealsContainer').innerHTML = appData.meals.map(m => `
+        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-3 flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-brand">${m.time}</span>
+              <span class="text-xs font-bold text-white">${m.name}</span>
+            </div>
+            <p class="text-xs text-zinc-400">${m.desc}</p>
+          </div>
+          <button onclick="deleteMeal(${m.id})" class="text-zinc-600 hover:text-rose-400 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
 
-    function resetAllAppData() {
-      if (confirm('Tem certeza de que deseja resetar todo o aplicativo para os dados padrão?')) {
-        localStorage.removeItem('pulsefit_data');
-        appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        saveData();
-        initChart();
-      }
+      document.getElementById('supplementsManagementList').innerHTML = appData.supplements.map(s => `
+        <div class="bg-darkSurface border border-zinc-800 rounded-2xl p-2.5 flex justify-between items-center text-xs">
+          <div>
+            <strong class="text-zinc-200">${s.name}</strong>
+            <p class="text-zinc-500 text-[11px]">${s.dosage}</p>
+          </div>
+          <button onclick="deleteSupplement(${s.id})" class="text-zinc-600 hover:text-rose-400 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
     }
+    function openAddMealModal() { openModal('modalAddMeal'); }
+    function confirmAddMeal() {
+      const name = document.getElementById('newMealName').value.trim();
+      const time = document.getElementById('newMealTime').value || '12:00';
+      const desc = document.getElementById('newMealDesc').value.trim();
+      if (!name) return alert('Dê um nome para a refeição.');
+      appData.meals.push({ id: Date.now(), name, time, desc, checked: false });
+      closeModal('modalAddMeal');
+      saveData();
+    }
+    function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); saveData(); }
+    function openAddSupplementModal() { openModal('modalAddSupplement'); }
+    function confirmAddSupplement() {
+      const name = document.getElementById('newSuppName').value.trim();
+      const dosage = document.getElementById('newSuppDosage').value.trim();
+      if (!name) return alert('Informe o nome do suplemento.');
+      appData.supplements.push({ id: Date.now(), name, dosage: dosage || 'Dose padrão', checked: false });
+      closeModal('modalAddSupplement');
+      saveData();
+    }
+    function deleteSupplement(id) { appData.supplements = appData.supplements.filter(s => s.id !== id); saveData(); }
+
+    // Helpers Modais
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function openAddExerciseModal() { adaptModalFields(); openModal('modalAddExercise'); }
   </script>
 </body>
 </html>
